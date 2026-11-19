@@ -1,0 +1,6 @@
+node_modules/
+remotion/public/base.mp4
+remotion/public/person.webm
+remotion/out/
+remotion/src/data.json
+*.u8

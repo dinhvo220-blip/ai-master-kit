@@ -3,7 +3,7 @@ import React from 'react';
 import {AbsoluteFill, Img, staticFile, useCurrentFrame, interpolate, Easing, spring, useVideoConfig, delayRender, continueRender} from 'remotion';
 import {loadFonts} from '../fonts';
 import data from './story.json';
-const D: any = data;
+let D: any = data;
 const FPS = 30;
 const CX = 480; // tâm vùng an toàn (x 70→890)
 const SAFE_L = 70, SAFE_R = 890;
@@ -116,7 +116,7 @@ const Badge: React.FC<{fr: number; b: any; sc: any}> = ({fr, b, sc}) => {
     <div style={{position: 'absolute', left: b.x - R, top: b.y - R, width: R * 2, height: R * 2, borderRadius: '50%', opacity: o, transform: `scale(${0.4 + 0.6 * sp}) rotate(${(1 - sp) * -30}deg)`,
       background: `radial-gradient(circle at 35% 30%, ${C.gold2}, ${C.gold} 45%, ${C.gold3} 100%)`, boxShadow: '0 10px 30px rgba(0,0,0,0.55), inset 0 0 0 5px rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
       <div style={{position: 'absolute', inset: 12, borderRadius: '50%', border: '1.5px solid rgba(60,35,10,0.45)'}} />
-      <div style={{fontFamily: SANS, fontWeight: 700, fontSize: 14, letterSpacing: '0.3em', color: '#4A2E12', marginBottom: 2}}>NĂM</div>
+      <div style={{fontFamily: SANS, fontWeight: 700, fontSize: 14, letterSpacing: '0.3em', color: '#4A2E12', marginBottom: 2}}>{b.label ?? 'NĂM'}</div>
       <div style={{fontFamily: SERIF, fontWeight: 900, fontSize: b.small ? 44 : 50, color: '#3A220C', fontVariantNumeric: 'lining-nums'}}>{b.text}</div>
     </div>
   );
@@ -216,8 +216,8 @@ const Comment: React.FC<{fr: number; sc: any}> = ({fr, sc}) => {
         <svg width="40" height="40" viewBox="0 0 24 24"><path d="M4 4h16v11H8l-4 4z" fill="none" stroke="#2A1A0C" strokeWidth="2" strokeLinejoin="round" /></svg>
         <div style={{fontFamily: SANS, fontWeight: 800, fontSize: 30, color: '#2A1A0C'}}>Bình luận cho mình biết nhé!</div>
       </div>
-      <div style={{display: 'flex', gap: 16}}>
-        {['Hero', 'Goddess', 'Her', 'Prorsum'].map((n, i) => {
+      <div style={{display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 800}}>
+        {(sc.comment.names ?? ['Hero', 'Goddess', 'Her', 'Prorsum']).map((n: string, i: number) => {
           const q = inP(fr, sc.comment.d + 0.25 + i * 0.12, 12);
           return <div key={n} style={{opacity: q, transform: `scale(${0.8 + 0.2 * q})`, padding: '12px 22px', border: `1.5px solid ${C.gold}`, borderRadius: 999, fontFamily: SERIF, fontWeight: 700, fontSize: 30, color: C.gold2, background: 'rgba(12,8,6,0.8)'}}>{n}</div>;
         })}
@@ -236,7 +236,7 @@ const EndCard: React.FC<{fr: number}> = ({fr}) => {
       <div style={{position: 'absolute', left: SAFE_L, width: SAFE_R - SAFE_L, top: 760, textAlign: 'center'}}>
         <div style={{fontFamily: SANS, fontWeight: 600, fontSize: 22, letterSpacing: `${0.7 - 0.3 * p}em`, color: C.gold, opacity: 0.85}}>BRITISH HERITAGE SINCE 1856</div>
         <div style={{fontFamily: SERIF, fontWeight: 700, fontSize: 108, letterSpacing: '0.04em', lineHeight: 1.05, marginTop: 18, paddingTop: '0.2em', ...goldText}}>BURBERRY</div>
-        <div style={{fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 52, color: C.gold2, marginTop: 4}}>Beauty</div>
+        <div style={{fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 52, color: C.gold2, marginTop: 4}}>{D.endSub ?? 'Beauty'}</div>
         <div style={{margin: '26px auto 0', width: 260 * inP(fr, s + 0.3, 20), height: 1.5, background: `linear-gradient(90deg, transparent, ${C.gold}, transparent)`}} />
         <div style={{marginTop: 22, fontFamily: SANS, fontWeight: 500, fontSize: 18, letterSpacing: '0.1em', color: C.gold, opacity: 0.6}}>Thông tin & hình ảnh: burberry.com · Coty</div>
       </div>
@@ -247,7 +247,7 @@ const EndCard: React.FC<{fr: number}> = ({fr}) => {
 const Subs: React.FC<{fr: number}> = ({fr}) => {
   const t = fr / FPS;
   const s = D.subs.find((x: any) => t >= x.s && t < x.e);
-  if (!s || t > D.end - 2.6) return null;
+  if (D.nosubs || !s || t > D.end - 2.6) return null;
   const o = Math.min(inP(fr, s.s, 5), outP(fr, s.e, 4));
   return (
     <div style={{position: 'absolute', left: SAFE_L + 10, width: SAFE_R - SAFE_L - 20, top: 1418, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', columnGap: 12, rowGap: 4, opacity: o}}>
@@ -259,7 +259,8 @@ const Subs: React.FC<{fr: number}> = ({fr}) => {
   );
 };
 
-export const Story: React.FC = () => {
+export const Story: React.FC<{d?: any}> = ({d}) => {
+  if (d) D = d;
   loadFonts(); loadSerif();
   const fr = useCurrentFrame();
   const t = fr / FPS;

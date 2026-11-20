@@ -3,6 +3,7 @@ python3 mix_story.py <story_dir> <sfx_dir> <out.wav>"""
 import sys, json, wave
 import numpy as np
 SD, SFXD, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+NOVOICE = len(sys.argv) > 4 and sys.argv[4] == 'novoice'
 SR = 48000
 def rd(fn):
     w = wave.open(fn); n = w.getnchannels(); sr = w.getframerate(); sw = w.getsampwidth()
@@ -51,7 +52,7 @@ mus *= fade[:, None]
 # ducking under voice
 venv = np.abs(v[:, 0]); win = int(0.25 * SR)
 venv = np.convolve(venv, np.ones(win) / win, 'same')
-duck = np.where(venv > 0.01, 0.42, 1.0)
+duck = np.where(venv > 0.01, 0.42, 1.0) if not NOVOICE else np.full(len(venv), 0.6)
 duck = np.convolve(duck, np.ones(int(0.3 * SR)) / int(0.3 * SR), 'same')
 mus *= duck[:, None]
 mus *= 10 ** (-3 / 20) / max(1e-6, np.sqrt(np.mean(mus ** 2))) * 0.05  # music rms ≈ -29 dBFS before duck
@@ -65,7 +66,7 @@ for name, tm in json.load(open(f'{SD}/sfx.json')):
     a = cache[name] * 10 ** (LV.get(name, -16) / 20) / max(1e-6, np.max(np.abs(cache[name])))
     i = int(max(0, tm) * SR); e = min(N, i + len(a))
     if i < N: fx[i:e] += a[:e - i]
-mixed = v * 1.0 + mus + fx
+mixed = (0 if NOVOICE else v) + mus + fx
 mixed /= max(1.0, np.max(np.abs(mixed)) / 0.95)
 w = wave.open(OUT, 'wb'); w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
 w.writeframes((mixed * 32767).astype(np.int16).tobytes()); w.close()

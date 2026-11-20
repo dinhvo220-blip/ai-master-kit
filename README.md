@@ -19,6 +19,10 @@ Model tách nền: rembg tự tải u2net_human_seg (~176MB) vào ~/.rembg/model
 7. Nháp: `npx remotion render ... --scale=0.5`; Bản cuối: `--concurrency=2 --muted --crf=18 --x264-preset=veryfast` (~20 phút/110 s).
 8. `mix.py` (voice + sfx) -> loudnorm -14 LUFS -> mux.
 
+## SFX v2 (21/11/2026)
+- 39 file trong `sfx/` (9 bản v1 + 30 bản v2 stereo, tự tổng hợp – không bản quyền). Xem `sfx/CATALOG.md` để chọn SFX theo tình huống + mức âm lượng.
+- Tạo lại: `python3 scripts/sfx2.py /root/bb/sfx`. Brand luxury: ưu tiên whoosh_soft, ding_luxury, sparkle_long, glass_clink, hit_soft.
+
 ## Bổ sung (Gucci Beauty Black Friday, 19/11/2026)
 - Main.tsx: palette lấy từ data.palette (mặc định tông Gucci kem/xanh rêu/đỏ/vàng); Pins.label, Timeline a/b + dark, Receipt label/gift/giftHi/stamp, EndCard brand/sub/items đều lấy từ data – đổi brand không cần sửa code. Bản Burberry gốc: src/Main.burberry.tsx.
 - data_gucci.py: beat plan mẫu Gucci (1 clip dài, chia shot giả tại các câu để có zoom-cut). Clip 1 file: dùng a0.wav, K0.json (cut0 trong data_gucci theo chunks).

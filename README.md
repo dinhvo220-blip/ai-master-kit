@@ -29,3 +29,10 @@ Model tách nền: rembg tự tải u2net_human_seg (~176MB) vào ~/.rembg/model
 - m30.py: nội suy masks15.u8 -> masks30.u8 (cần trước person.py/data.py).
 - sheet.py: ghép ảnh still thành lưới 4 cột có khung vùng an toàn: `python3 sheet.py out.jpg 30 170 ...`
 - Cận cảnh (đầu chiếm >50% khung): đặt thẻ/pill/timeline y≈1200–1230, ẩn phụ đề khi có thẻ lớn, tiêu đề sau người ≤150px; chữ nào bị tóc che quá nửa thì chuyển thành bigs (lớp trước) ở y≈300.
+
+## Video kể chuyện không người nói (Burberry Beauty 170 năm, 21/11/2026)
+- Style học từ kênh "Thế giới xa xỉ": nền tối 1 màu, kicker chữ thưa + tiêu đề serif vàng in hoa (mask-slide), ảnh khung vàng có góc, huy hiệu năm, nhãn mộc đỏ, chip nốt hương, phụ đề karaoke nhỏ ở đáy, nhãn chương "I · KHỞI NGUỒN" góc trái.
+- Code: `remotion/src/story/Story.tsx` + `index.ts` (entry riêng: `npx remotion render src/story/index.ts BurberryStory ...`). Dữ liệu: `scripts/data_story_burberry.py` (đọc lời ở /home/claude/tts/lines2.py, wav từng câu), trộn: `scripts/mix_story.py` (nhạc pad+piano tự tổng hợp, duck dưới giọng).
+- Giọng đọc AI: `pip install vieneu` (VieNeu-TTS v3 Turbo, chạy CPU/ONNX, đọc được tên tiếng Anh). Lỗi onnxruntime "External data path escapes model directory" → thay symlink trong ~/.cache/huggingface/hub/*/snapshots bằng file thật. Giọng dùng: "Thục Đoan" (nữ, miền Nam, kể chuyện). Piper vi_VN đọc sai nhiều, không dùng.
+- Ảnh chính hãng: shell không vào được burberry.com → mở trang bằng trình duyệt trong app Claude, liệt kê ảnh assets.burberry.com bằng JS, hiển thị từng ảnh full khung (viewport 1200x1500) rồi chụp màn hình (file lưu ở /tmp/claude-tool-results, ~800px). Không commit ảnh/giọng.
+- Gradient chữ (background-clip:text) cắt mất dấu tiếng Việt in hoa → thêm paddingTop 0.34em + marginTop -0.3em cho chính phần tử chữ.

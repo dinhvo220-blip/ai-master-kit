@@ -4,3 +4,8 @@ remotion/public/person.webm
 remotion/out/
 remotion/src/data.json
 *.u8
+remotion/src/story/story.json
+remotion/src/story/voice.wav
+remotion/src/story/sfx.json
+remotion/public/bb/
+remotion/out/

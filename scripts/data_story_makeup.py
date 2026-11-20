@@ -14,10 +14,9 @@ L = [
  ('tech2', ['Công nghệ tạo một lớp màng mỏng,', 'chống nước mà vẫn thoáng khí.']),
  ('found', ['Beyond Wear', 'Perfecting Matte Foundation,', 'lớp nền lì tự nhiên,', 'che phủ từ vừa đến cao.']),
  ('found2', ['Chống nước, độ ẩm,', 'mồ hôi và nhiệt.']),
- ('primer', ['Bước đầu tiên:', 'Beyond Wear', 'Hydrating Matte Primer,', 'lì mịn 24 giờ, cấp ẩm 18 giờ.']),
+ ('primer', ['Bước đầu tiên:', 'Beyond Wear Radiance Primer,', 'căng bóng rạng rỡ từ bên trong,', 'cấp ẩm 24 giờ.']),
  ('powder', ['Bước cuối:', 'Setting and Refining Powder,', 'phấn phủ 2 trong 1,', 'cho lớp lì 24 giờ.']),
  ('blush', ['Outdoor Blush có sáu sắc lì ánh nhẹ,', 'lấy cảm hứng từ sắc màu dịu', 'của vùng quê nước Anh.']),
- ('blush2', ['Mùa lễ hội này', 'còn có bản Holiday Edition, Winter Rose.']),
  ('eye', ['Burberry Eye Quad,', 'bảng mắt bốn ô', 'lấy cảm hứng từ màu di sản Burberry.']),
  ('eye2', ['Trong hộp màu be và vàng đặc trưng,', 'kèm gương và đầu tán.']),
  ('kisses', ['Son biểu tượng Burberry Kisses:', 'chất son satin, 31 sắc,', 'hương hoa hồng tươi.']),
@@ -26,7 +25,7 @@ L = [
  ('outro', ['Từ chiếc trench coat', 'đến từng thỏi son,', 'đó là Burberry Make-up.']),
  ('cta', ['Bạn muốn thử món nào trước?', 'Bình luận cho mình biết nhé.']),
 ]
-EN = {'make-up': 2, 'technology,': 4, 'perfecting': 3, 'foundation,': 3, 'hydrating': 3, 'primer,': 2, 'refining': 3, 'powder,': 2,
+EN = {'make-up': 2, 'technology,': 4, 'perfecting': 3, 'foundation,': 3, 'hydrating': 3, 'radiance': 3, 'primer,': 2, 'refining': 3, 'powder,': 2,
       'outdoor': 2, 'holiday': 3, 'edition,': 3, 'quad,': 1, 'kisses:': 2, 'gabardine': 3, 'burberry': 3, 'protect': 2, 'london.': 2}
 def syl(w):
     k = w.lower()
@@ -94,22 +93,20 @@ scene('found', 'found2', chapter='I · LỚP NỀN', kicker='KEM NỀN', title='
       labels=[{'text': 'LÌ TỰ NHIÊN · CHE PHỦ VỪA ĐẾN CAO', 'x': 480, 'y': 1270, 'd': at('found', 'lớp'), 'until': at('found2')}],
       chips=[{'text': x, 'd': at('found2', w)} for x, w in [('Nước', 'nước'), ('Độ ẩm', 'độ'), ('Mồ hôi', 'mồ'), ('Nhiệt', 'nhiệt')]],
       sfx=[('whoosh_soft', at('found', off=-0.2)), ('ding_luxury', at('found', 'beyond')), ('pop_soft', at('found', 'lớp'))] + [('tick', at('found2', w)) for w in ['nước', 'độ', 'mồ', 'nhiệt']])
-scene('primer', 'primer', chapter='I · LỚP NỀN', kicker='BƯỚC ĐẦU TIÊN', title='Primer', size=110,
-      cards=[{'img': P + '03_primer.jpg', 'x': 480, 'y': 940, 'w': SQ, 'h': SQ, 'd': at('primer', 'beyond')}],
-      badge={'text': '24H', 'label': 'LÌ MỊN', 'x': 740, 'y': 680, 'd': at('primer', '24')},
-      labels=[{'text': 'CẤP ẨM 18 GIỜ', 'x': 480, 'y': 1270, 'd': at('primer', 'cấp')}],
-      sfx=[('whoosh_soft', at('primer', off=-0.2)), ('ding_luxury', at('primer', '24')), ('pop_soft', at('primer', 'cấp'))])
+scene('primer', 'primer', chapter='I · LỚP NỀN', kicker='BƯỚC ĐẦU TIÊN · CĂNG BÓNG', title='Radiance Primer', size=76,
+      cards=[{'img': P + '03_primer_radiance.jpg', 'x': 480, 'y': 940, 'w': SQ, 'h': SQ, 'd': at('primer', 'beyond')}],
+      badge={'text': '24H', 'label': 'CẤP ẨM', 'x': 740, 'y': 680, 'd': at('primer', '24')},
+      labels=[{'text': 'RẠNG RỠ TỪ BÊN TRONG', 'x': 480, 'y': 1270, 'd': at('primer', 'căng')}],
+      sfx=[('whoosh_soft', at('primer', off=-0.2)), ('shimmer', at('primer', 'căng')), ('ding_luxury', at('primer', '24'))])
 scene('powder', 'powder', chapter='I · LỚP NỀN', kicker='BƯỚC CUỐI', title='Setting Powder', size=74,
       cards=[{'img': P + '04_powder.jpg', 'x': 480, 'y': 940, 'w': SQ, 'h': SQ, 'd': at('powder', 'setting')}],
       stamp={'text': '2 TRONG 1', 'x': 480, 'y': 1250, 'd': at('powder', '2')},
       badge={'text': '24H', 'label': 'LÌ', 'x': 740, 'y': 680, 'd': at('powder', '24')},
       sfx=[('whoosh_soft', at('powder', off=-0.2)), ('stamp', at('powder', '2')), ('ding_luxury', at('powder', '24'))])
-scene('blush', 'blush2', chapter='II · MÁ & MẮT', kicker='MÁ HỒNG', title='Outdoor Blush', size=78,
-      cards=[{'img': P + '05_blush.jpg', 'x': 480, 'y': 940, 'w': SQ, 'h': SQ, 'd': at('blush'), 'until': at('blush2', 'holiday', off=-0.3)},
-             {'img': P + '06_blush_holiday.jpg', 'x': 480, 'y': 940, 'w': SQ, 'h': SQ, 'd': at('blush2', 'holiday', off=-0.3)}],
-      labels=[{'text': '6 SẮC · VÙNG QUÊ NƯỚC ANH', 'x': 480, 'y': 1270, 'd': at('blush', 'vùng'), 'until': at('blush2', 'holiday', off=-0.3)},
-              {'text': 'HOLIDAY EDITION · WINTER ROSE', 'x': 480, 'y': 1270, 'd': at('blush2', 'winter')}],
-      sfx=[('whoosh_deep', at('blush', off=-0.3)), ('ding_luxury', at('blush', 'outdoor')), ('pop_soft', at('blush', 'vùng')), ('whoosh_soft', at('blush2', 'holiday', off=-0.3)), ('sparkle_long', at('blush2', 'winter'))])
+scene('blush', 'blush', chapter='II · MÁ & MẮT', kicker='MÁ HỒNG', title='Outdoor Blush', size=78,
+      cards=[{'img': P + '05_blush.jpg', 'x': 480, 'y': 940, 'w': SQ, 'h': SQ, 'd': at('blush')}],
+      labels=[{'text': '6 SẮC · VÙNG QUÊ NƯỚC ANH', 'x': 480, 'y': 1270, 'd': at('blush', 'vùng')}],
+      sfx=[('whoosh_deep', at('blush', off=-0.3)), ('ding_luxury', at('blush', 'outdoor')), ('pop_soft', at('blush', 'vùng'))])
 scene('eye', 'eye2', chapter='II · MÁ & MẮT', kicker='PHẤN MẮT', title='Eye Quad', size=104,
       cards=[{'img': P + '07_eyequad.jpg', 'x': 480, 'y': 940, 'w': SQ, 'h': SQ, 'd': at('eye')}],
       labels=[{'text': '4 Ô · MÀU DI SẢN BURBERRY', 'x': 480, 'y': 1270, 'd': at('eye', 'bảng'), 'until': at('eye2')}],

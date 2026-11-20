@@ -49,17 +49,37 @@ buf = buf[:int(END * SR)]
 wave_out = wave.open(f'{OUT}/voice.wav', 'wb'); wave_out.setnchannels(1); wave_out.setsampwidth(2); wave_out.setframerate(SR)
 wave_out.writeframes((np.clip(buf, -1, 1) * 32767).astype(np.int16).tobytes()); wave_out.close()
 
-# subtitle chunks: split at punctuation or 7 words
+# subtitle chunks: ngắt tay theo cụm nghĩa, mỗi cụm 1 dòng (không tách từ ghép)
+SPLIT = {
+ 'hook': ['Một chiếc trench coat', 'thì liên quan gì tới nước hoa?'],
+ 'hook2': ['Xem hết clip này,', 'bạn sẽ hiểu Burberry Beauty.'],
+ 's1856': ['Năm 1856,', 'chàng trai 21 tuổi Thomas Burberry', 'thành lập Burberry', 'tại Basingstoke, nước Anh.'],
+ 's1879': ['Ông muốn quần áo', 'phải bảo vệ con người', 'trước thời tiết nước Anh.'],
+ 's1879b': ['Năm 1879,', 'ông phát minh ra vải gabardine,', 'thoáng khí và chống chọi thời tiết.'],
+ 'trench': ['Từ đó,', 'chiếc trench coat huyền thoại ra đời.'],
+ 'check': ['Những năm 1920,', 'họa tiết Burberry Check xuất hiện,', 'ban đầu chỉ là lớp lót', 'bên trong áo khoác.'],
+ 'logo': ['Còn logo là hiệp sĩ cưỡi ngựa,', 'trên lá cờ có chữ Prorsum,', 'tiếng Latin nghĩa là:', 'Tiến lên.'],
+ 'bridge': ['Và khi bước sang nước hoa,', 'Burberry mang theo', 'chính những di sản ấy.'],
+ 'hero': ['Burberry Hero,', 'chai thủy tinh góc cạnh,', 'được cách điệu từ hình móng ngựa.'],
+ 'hero2': ['Bản Eau de Parfum', 'có nhũ hương và benzoin,', 'trên nền gỗ tuyết tùng và thông.'],
+ 'goddess': ['Burberry Goddess', 'là chai nước hoa refill được', 'đầu tiên của Burberry.'],
+ 'goddess2': ['Dáng chai lấy cảm hứng', 'từ kho lưu trữ của hãng,', 'và mùi hương', 'xây quanh bộ ba vanilla.'],
+ 'her': ['Burberry Her,', 'hương thơm cho người phụ nữ', 'hiện đại, mang tinh thần London.'],
+ 'her2': ['Quả mọng đỏ và đen,', 'hổ phách, và gỗ trắng.'],
+ 'prorsum': ['Năm 2026, tròn 170 năm,', 'Burberry ra mắt Prorsum Collection,', 'gồm 8 mùi hương.'],
+ 'prorsum2': ['Lần đầu tiên,', 'họa tiết Burberry Check', 'được chuyển thành mùi hương.'],
+ 'prorsum3': ['Có cả Gabardine,', 'Kensington Trench, và Knight.'],
+ 'outro': ['Vậy đó, Burberry Beauty', 'là 170 năm di sản Anh quốc,', 'được kể lại bằng mùi hương.'],
+ 'cta': ['Bạn muốn thử mùi nào?', 'Bình luận cho mình biết nhé.'],
+}
 subs = []
 for ln in lines:
-    cur = []
-    for i, w in enumerate(ln['words']):
-        cur.append(w)
-        if re.search(r'[,.:?!]$', w['w']) and len(cur) >= 3 or len(cur) >= 7:
-            subs.append(cur); cur = []
-    if cur:
-        if len(cur) <= 2 and subs and subs[-1][0]['s'] >= ln['s']: subs[-1] += cur
-        else: subs.append(cur)
+    ws = ln['words']; i = 0
+    for part in SPLIT[ln['k']]:
+        n = len(part.split())
+        assert ' '.join(w['w'] for w in ws[i:i + n]) == part, (ln['k'], part)
+        subs.append(ws[i:i + n]); i += n
+    assert i == len(ws), ln['k']
 subs = [{'s': c[0]['s'], 'e': c[-1]['e'], 'words': c} for c in subs]
 for i in range(len(subs) - 1):  # hold until next if gap small
     if subs[i + 1]['s'] - subs[i]['e'] < 0.5: subs[i]['e'] = subs[i + 1]['s']
@@ -91,8 +111,8 @@ def scene(k_from, k_to, **kw):
     e = nxt(k_to) - 0.25 if k_to != 'cta' else END
     S.append({'s': round(s, 3), 'e': round(e, 3), **kw})
 
-scene('hook', 'hook', chapter='', kicker='BURBERRY BEAUTY', title='Áo mưa\n& nước hoa?', size=96,
-      cards=[{'img': P + '06_trench_1914.jpg', 'x': 315, 'y': 960, 'w': 380, 'h': 673, 'rot': -4, 'd': at('hook', 'áo')},
+scene('hook', 'hook', chapter='', kicker='BURBERRY BEAUTY', title='Trench coat\n& nước hoa?', size=92,
+      cards=[{'img': P + '06_trench_1914.jpg', 'x': 315, 'y': 960, 'w': 380, 'h': 673, 'rot': -4, 'd': at('hook', 'trench')},
              {'img': P + '08_goddess_family.jpg', 'x': 655, 'y': 1000, 'w': 400, 'h': 533, 'rot': 4, 'd': at('hook', 'nước')}],
       sfx=[('whoosh_deep', at('hook')), ('ding_luxury', at('hook', 'nước'))])
 scene('hook2', 'hook2', kicker='XEM HẾT ĐỂ HIỂU', title='Burberry\nBeauty', size=104,
@@ -151,7 +171,7 @@ scene('prorsum', 'prorsum', chapter='IV · 170 NĂM', kicker='BỘ SƯU TẬP M�
       badge={'text': '2026', 'x': 740, 'y': 640, 'd': at('prorsum', '2026')},
       labels=[{'text': '8 MÙI HƯƠNG', 'x': 480, 'y': 1300, 'd': at('prorsum', '8'), 'big': True}],
       sfx=[('whoosh_deep', at('prorsum', off=-0.3)), ('ding_luxury', at('prorsum', '2026')), ('sparkle_long', at('prorsum', 'prorsum')), ('hit_soft', at('prorsum', '8'))])
-scene('prorsum2', 'prorsum2', chapter='IV · 170 NĂM', kicker='LẦN ĐẦU TIÊN', title='Check\nthành mùi hương', size=78,
+scene('prorsum2', 'prorsum2', chapter='IV · 170 NĂM', kicker='LẦN ĐẦU TIÊN', title='Check\nthành mùi hương', size=62,
       cards=[{'img': P + '04_check.jpg', 'x': 330, 'y': 960, 'w': 380, 'h': 475, 'rot': -4, 'd': at('prorsum2')},
              {'img': P + '12_prorsum_gabardine.jpg', 'x': 650, 'y': 1000, 'w': 380, 'h': 475, 'rot': 4, 'd': at('prorsum2', 'chuyển')}],
       sfx=[('whoosh_soft', at('prorsum2', off=-0.2)), ('shimmer', at('prorsum2', 'chuyển'))])
@@ -160,7 +180,7 @@ scene('prorsum3', 'prorsum3', chapter='IV · 170 NĂM', kicker='TÊN GỌI TỪ 
             {'img': P + '13_prorsum_kensington.jpg', 'name': 'Kensington Trench', 'd': at('prorsum3', 'kensington')},
             {'img': P + '14_prorsum_knight.jpg', 'name': 'Knight', 'd': at('prorsum3', 'knight')}],
       sfx=[('whoosh_soft', at('prorsum3', off=-0.2))] + [('pop_soft', at('prorsum3', w)) for w in ['gabardine', 'kensington', 'knight']])
-scene('outro', 'outro', chapter='', kicker='BURBERRY BEAUTY', title='170 năm di sản\nkể bằng mùi hương', size=72,
+scene('outro', 'outro', chapter='', kicker='BURBERRY BEAUTY', title='170 năm di sản\nqua từng mùi hương', size=56,
       cards=[{'img': P + '07_hero_edp.jpg', 'x': 250, 'y': 1000, 'w': 300, 'h': 375, 'rot': -6, 'd': at('outro')},
              {'img': P + '08_goddess_family.jpg', 'x': 480, 'y': 960, 'w': 320, 'h': 426, 'd': at('outro', 'burberry')},
              {'img': P + '10b_her_edp.jpg', 'x': 710, 'y': 1000, 'w': 300, 'h': 375, 'rot': 6, 'd': at('outro', 'beauty')}],

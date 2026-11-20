@@ -1,6 +1,6 @@
 // Burberry Beauty – video kể chuyện kiểu "Thế giới xa xỉ" (nền tối, serif vàng, ảnh khung vàng, phụ đề karaoke)
 import React from 'react';
-import {AbsoluteFill, Img, Audio, staticFile, useCurrentFrame, interpolate, Easing, spring, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Img, staticFile, useCurrentFrame, interpolate, Easing, spring, useVideoConfig, delayRender, continueRender} from 'remotion';
 import {loadFonts} from '../fonts';
 import data from './story.json';
 const D: any = data;
@@ -11,7 +11,21 @@ const C = {bg0: '#2B1D13', bg1: '#0C0806', gold: '#D9B677', gold2: '#F1DDB0', go
 const EIN = Easing.bezier(0.16, 1, 0.3, 1);
 const EOUT = Easing.bezier(0.7, 0, 0.84, 0);
 const SANS = 'Be Vietnam Pro';
-const SERIF = 'Playfair Display';
+const SERIF = 'NotoSerifDisplay';
+const VI = 'U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB';
+const LAT = 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD';
+const LEXT = 'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF';
+let serifLoaded = false;
+const loadSerif = () => {
+  if (serifLoaded) return; serifLoaded = true;
+  const h = delayRender('serif');
+  const jobs: Promise<any>[] = [];
+  for (const st of ['normal', 'italic']) for (const [sub, r] of [['latin', LAT], ['latin-ext', LEXT], ['vietnamese', VI]]) {
+    const ff = new FontFace(SERIF, `url(${staticFile(`fonts/noto-serif-display-${sub}-wght-${st}.woff2`)}) format('woff2')`, {weight: '100 900', style: st, unicodeRange: r});
+    jobs.push(ff.load().then((x) => (document as any).fonts.add(x)));
+  }
+  Promise.all(jobs).then(() => continueRender(h)).catch((e) => {console.error(e); continueRender(h);});
+};
 const f = (t: number) => Math.round(t * FPS);
 const cl = {extrapolateLeft: 'clamp' as const, extrapolateRight: 'clamp' as const};
 const inP = (fr: number, t: number, d = 12) => interpolate(fr, [f(t), f(t) + d], [0, 1], {...cl, easing: EIN});
@@ -54,7 +68,7 @@ const Title: React.FC<{fr: number; sc: any}> = ({fr, sc}) => {
         const p = inP(fr, sc.s + 0.12 + i * 0.12, 18);
         return (
           <div key={i} style={{overflow: 'hidden', paddingBottom: 8}}>
-            <div style={{fontFamily: SERIF, fontWeight: 700, fontSize: sc.size, lineHeight: 1.12, letterSpacing: '0.02em', textTransform: 'uppercase', fontVariantNumeric: 'lining-nums', paddingTop: '0.34em', marginTop: '-0.3em', transform: `translateY(${(1 - p) * 105}%)`, ...goldText, filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.5))'}}>{ln}</div>
+            <div style={{fontFamily: SERIF, fontWeight: 600, fontSize: sc.size, lineHeight: 1.12, letterSpacing: '0.02em', textTransform: 'uppercase', fontVariantNumeric: 'lining-nums', paddingTop: '0.34em', marginTop: '-0.3em', transform: `translateY(${(1 - p) * 105}%)`, ...goldText, filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.5))'}}>{ln}</div>
           </div>
         );
       })}
@@ -246,7 +260,7 @@ const Subs: React.FC<{fr: number}> = ({fr}) => {
 };
 
 export const Story: React.FC = () => {
-  loadFonts();
+  loadFonts(); loadSerif();
   const fr = useCurrentFrame();
   const t = fr / FPS;
   return (

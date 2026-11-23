@@ -96,7 +96,7 @@ const TitleM: React.FC<{fr: number; t: any; D: DT}> = ({fr, t}) => {
           <div style={{height: 2, width: 60 * lineP, background: col, opacity: 0.6}} />
         </div>
       ) : null}
-      <div style={{position: 'relative', overflow: 'hidden', paddingTop: size * 0.12, marginTop: -size * 0.12}}>
+      <div style={{position: 'relative', overflow: 'hidden', paddingTop: size * 0.36, marginTop: -size * 0.36}}>
         <div style={{fontFamily: SANS, fontWeight: t.weight ?? 900, fontSize: size, lineHeight: `${size * 1.02}px`, color: col, whiteSpace: 'nowrap', letterSpacing: ip(k, 0, 26, 0.05 * size, -0.01 * size), textTransform: 'uppercase', textShadow: t.shadow ? '0 4px 24px rgba(0,0,0,.45)' : undefined}}>
           {chars.map((ch, i) => {
             const p = ip(k, i * 1.5, i * 1.5 + 14);
@@ -208,7 +208,7 @@ const BrandCard: React.FC<{fr: number; b: any}> = ({fr, b}) => {
       {/* shine sweep */}
       <div style={{position: 'absolute', top: -200, bottom: -200, width: 160, left: ip(k, 6, 26, -300, CW + 300, Easing.inOut(Easing.cubic)), background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent)', transform: 'skewX(-20deg)'}} />
     </div>
-    <div style={{position: 'absolute', left: SAFE.l, width: W_SAFE, top: top + CH + 40, textAlign: 'center', overflow: 'hidden'}}>
+    <div style={{position: 'absolute', left: SAFE.l, width: W_SAFE, top: top + CH + 40 - 36, paddingTop: 36, textAlign: 'center', overflow: 'hidden'}}>
       <div style={{fontFamily: SANS, fontWeight: 800, fontSize: b.nameSize ?? 104, color: WHITE, letterSpacing: interpolate(nameP, [0, 1], [40, 14]), lineHeight: 1.1, transform: `translateY(${(1 - nameP) * 100}%)`, whiteSpace: 'nowrap'}}>{b.name}</div>
     </div>
     <div style={{position: 'absolute', left: SAFE.l, width: W_SAFE, top: top + CH + 172, display: 'flex', justifyContent: 'center', opacity: tagP, transform: `translateY(${(1 - tagP) * 20}px)`}}>
@@ -278,13 +278,37 @@ const CoverTitle: React.FC<{fr: number; c: any}> = ({fr, c}) => {
     <AbsoluteFill style={{background: 'rgba(10,10,10,.5)', backdropFilter: `blur(${v * 34}px)`, WebkitBackdropFilter: `blur(${v * 34}px)`}} />
     <div style={{position: 'absolute', left: SAFE.l, width: W_SAFE, top: c.y ?? 640, textAlign: 'center', transform: `scale(${1.06 - 0.06 * ip(k, 0, 30)})`}}>
       <div style={{fontFamily: SANS, fontWeight: 500, fontSize: 32, letterSpacing: ip(k, 0, 20, 20, 10), color: 'rgba(255,255,255,.85)', textTransform: 'uppercase'}}>{c.small}</div>
-      {c.lines.map((ln: string, i: number) => <div key={i} style={{overflow: 'hidden', paddingTop: sz * 0.12, marginTop: -sz * 0.08}}>
+      {c.lines.map((ln: string, i: number) => <div key={i} style={{overflow: 'hidden', paddingTop: sz * 0.36, marginTop: -sz * 0.3}}>
         <div style={{fontFamily: SANS, fontWeight: 900, fontSize: sz, lineHeight: 1.0, color: WHITE, letterSpacing: -2, whiteSpace: 'nowrap', transform: `translateY(${(1 - ip(k, 3 + i * 5, 17 + i * 5)) * 110}%)`}}>{ln}</div>
       </div>)}
       {c.sub ? <div style={{display: 'flex', justifyContent: 'center', marginTop: 26, opacity: ip(k, 14, 26)}}>
         <div style={{background: WHITE, color: INK, borderRadius: 999, padding: '12px 30px 14px', fontFamily: SANS, fontWeight: 700, fontSize: 36}}>{c.sub}</div></div> : null}
     </div>
   </AbsoluteFill>;
+};
+
+
+// ---------- băng chữ chạy (thay cover, không che mặt) ----------
+const Ticker: React.FC<{fr: number; t: any}> = ({fr, t}) => {
+  if (!active(fr, t.s, t.e)) return null;
+  const k = fr - f(t.s);
+  const out = ip(fr, f(t.e) - 8, f(t.e), 1, 0, EOUT);
+  return <div style={{position: 'absolute', left: SAFE.l, width: W_SAFE, top: t.y, opacity: out}}>
+    {t.lines.map((ln: string, i: number) => {
+      const wipe = ip(k, i * 4, i * 4 + 14, 0, 1, Easing.bezier(0.65, 0, 0.35, 1));
+      const light = (t.tone === 'light') !== (i % 2 === 1);
+      const dir = i % 2 ? 1 : -1;
+      const x = dir * (fr - f(t.s)) * 3.2 - (dir > 0 ? 1600 : 0);
+      const unit = `${ln}   ✦   `;
+      return <div key={i} style={{position: 'relative', height: 74, marginBottom: 12, borderRadius: 16, overflow: 'hidden',
+        ...(light ? glassLight : glassDark), clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0 round 16px)`, transform: `rotate(${i % 2 ? 1.2 : -1.2}deg)`,
+        WebkitMaskImage: 'linear-gradient(90deg, transparent 0, black 40px, black calc(100% - 40px), transparent 100%)'}}>
+        <div style={{position: 'absolute', top: 0, left: x, height: 74, display: 'flex', alignItems: 'center', whiteSpace: 'pre', fontFamily: SANS, fontWeight: 800, fontSize: 36, letterSpacing: 3, color: light ? INK : WHITE}}>
+          {Array.from({length: 8}).map((_, j) => <span key={j}>{unit.split('✦').map((part, q, arr) => <React.Fragment key={q}>{part}{q < arr.length - 1 ? <span style={{color: light ? '#B08A4A' : CHAMP}}>✦</span> : null}</React.Fragment>)}</span>)}
+        </div>
+      </div>;
+    })}
+  </div>;
 };
 
 // ---------- timeline ----------
@@ -311,7 +335,7 @@ const BigWord: React.FC<{fr: number; b: any}> = ({fr, b}) => {
   const v = life(fr, b.s, b.e, 10, 8);
   const k = fr - f(b.s);
   return <div style={{position: 'absolute', left: SAFE.l, right: SAFE.r, top: b.y, textAlign: 'center', opacity: v}}>
-    <div style={{overflow: 'hidden', paddingBottom: 6}}>
+    <div style={{overflow: 'hidden', paddingBottom: 6, paddingTop: b.size * 0.36, marginTop: -b.size * 0.36}}>
       <div style={{fontFamily: SANS, fontWeight: 900, fontSize: b.size, lineHeight: 1.05, color: b.color ?? WHITE, letterSpacing: -2, textTransform: 'uppercase', whiteSpace: 'nowrap', transform: `translateY(${(1 - ip(k, 0, 12)) * 105}%)`, textShadow: b.dark ? 'none' : '0 6px 30px rgba(0,0,0,.45)'}}>{b.text}</div>
     </div>
     {b.sub ? <div style={{fontFamily: SANS, fontWeight: 500, fontSize: 34, color: b.color ?? WHITE, letterSpacing: 4, marginTop: 4, textShadow: b.dark ? 'none' : '0 3px 14px rgba(0,0,0,.5)'}}><WordsIn text={b.sub} k={k - 6} /></div> : null}
@@ -415,7 +439,8 @@ export const Modern: React.FC<{d: DT}> = ({d: D}) => {
       {D.infos.map((c: any, i: number) => <Info key={i} fr={fr} c={c} />)}
       {D.bigs.map((b: any, i: number) => <BigWord key={i} fr={fr} b={b} />)}
       {D.timelines.map((t: any, i: number) => <Timeline key={i} fr={fr} t={t} />)}
-      {D.chapters.map((c: any, i: number) => <Chapter key={i} fr={fr} c={c} />)}
+      {(D.tickers ?? []).map((t: any, i: number) => <Ticker key={i} fr={fr} t={t} />)}
+      {(D.tickers ?? []).some((t: any) => t.y < 330 && active(fr, t.s - 0.2, t.e + 0.2)) ? null : D.chapters.map((c: any, i: number) => <Chapter key={i} fr={fr} c={c} />)}
       {(D.covers ?? []).map((c: any, i: number) => <CoverTitle key={i} fr={fr} c={c} />)}
       {D.montages.map((m: any, i: number) => <Montage key={i} fr={fr} m={m} />)}
       {D.brands.map((b: any, i: number) => <BrandCard key={i} fr={fr} b={b} />)}

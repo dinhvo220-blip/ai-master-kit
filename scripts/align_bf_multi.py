@@ -25,15 +25,15 @@ TX={
 21:"Và đặc biệt là mọi người được bốc thăm, và bốc thăm đó là không phải may rủi mà sẽ là trúng luôn.",
 22:"Tùy theo cái món mọi người bốc được nha mọi người, bốc lên là trúng thôi đó.",
 23:"Và điều kiện được bốc thăm là sau khi giảm hóa đơn trên 5 triệu nha mọi người.",
-24:"Mọi người đang đợi son của Gucci đúng không? Son của Gucci đang giảm 20% là còn chín trăm ít ít thôi mọi người ơi.",
-25:"Ok, và đó là những deal mà mình thấy là cực kỳ hấp dẫn trong dịp Black Friday này luôn mọi người.",
+24:"Mọi người đang đợi son của Gucci đúng không? son của Gucci đang giảm 20% là còn chín trăm ít ít thôi mọi người ơi.",
+25:"OK, và đó là những deal mà mình thấy là cực kỳ hấp dẫn trong dịp Black Friday này luôn mọi người.",
 26:"Từ 20 tháng 11 đến 30 tháng 11 là hết nha.",
 27:"Và đặc biệt quan trọng là hàng cũng rất là ít,",
 28:"cho nên mọi người nhanh chân nhanh tay ghé để mà săn deal hời nha mọi người ơi.",
 29:"Tại dịp sắp tới cũng là holiday nè mọi người,",
 30:"trong những dịp đó mọi người tặng quà rất là nhiều đúng không?",
 31:"Dịp cuối năm nữa, cho nên là dịp này là dịp mua sắm tốt nhất cho mọi người luôn á.",
-32:"Ok, cảm ơn mọi người đã xem hết video.",
+32:"OK, cảm ơn mọi người đã xem hết video.",
 33:"Và nhớ follow Darren để cập nhật thêm nhiều thông tin khuyến mãi, cũng như sản phẩm mới về, và tất tần tật về beauty của tất cả các quầy luôn nha.",
 }
 norm=lambda s: re.sub(r'[^\wÀ-ỹ%/]','',s.lower())

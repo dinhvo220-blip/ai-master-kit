@@ -51,7 +51,7 @@ def faceU(s,e):
 def hit(r,b): return not (r[2]<b[0] or r[0]>b[2] or r[3]<b[1] or r[1]>b[3])
 SUBTOP=1330
 
-D=dict(titlesFront=[],covers=[],base='src_n.mp4',person='person.webm',frames=FR,head=head,shots=[],punches=[],cuts=[],shakes=[],titles=[],chapters=[],chips=[],infos=[],bigs=[],
+D=dict(tickers=[],titlesFront=[],covers=[],base='src_n.mp4',person='person.webm',frames=FR,head=head,shots=[],punches=[],cuts=[],shakes=[],titles=[],chapters=[],chips=[],infos=[],bigs=[],
        timelines=[],montages=[],brands=[],endcards=[],flashes=[],bokeh=[],hideSubs=[],noteHi=[],noteHide=[],subY=[],sfx=[])
 def title(s,e,big,small=None,size=None,**kw):
   sz=int(min(size or 190,790/(len(big)*0.8)))
@@ -64,9 +64,8 @@ def title(s,e,big,small=None,size=None,**kw):
   if cov>0.08 or kw.pop('force',0):
     if bottom<fb[1]-6:
       D['titlesFront'].append(dict(s=s,e=e,big=big,small=small,size=sz,y=round(y),color='#FFFFFF',glow=False,shadow=1,**kw)); print('title FRONT',big,round(cov,2)); return
-    ws=big.split(); lines=[big] if len(big)<=12 else [' '.join(ws[:1]),' '.join(ws[1:])]
-    D['covers'].append(dict(s=s,e=min(e,s+(2.2 if len(lines)>1 else 1.7)),small=small,lines=lines,size=min(150,int(790/(max(len(l) for l in lines)*0.8))),y=640 if len(lines)>1 else 700)); D['hideSubs'].append(dict(s=s,e=min(e,s+1.7)))
-    print('title COVER',big,round(cov,2)); return
+    if any(abs(s-b['e'])<0.7 for b in D['brands']): print('title SKIP (sau ảnh quầy)',big); return
+    ticker(s,e,[((small+' · ') if small else '')+big.upper()],tone='light'); return
   D['titles'].append(dict(s=s,e=e,big=big,small=small,size=sz,y=round(y),**kw))
 def chipsize(it):
   sz=it.get('size',38)
@@ -94,9 +93,26 @@ def info(s,e,y,**kw):
   fb=faceU(s,e)
   if hit([100,y,860,y+h],fb):
     if fb[3]+20+h<=SUBTOP-10: y=fb[3]+20
-    else: kw['cover']=1; y=round(960-h/2-120)
+    else:
+      tl=kw.pop('ticker',None) or [ (kw.get('label','')+' '+kw.get('big','')).strip().upper() ]+[r['text'].upper() for r in rows][:1]
+      ticker(s,e,tl); return
   D['infos'].append(dict(s=s,e=e,y=round(y),**kw)); D['sfx'].append(['swoosh_up',s-0.1,-20])
   for r in kw.get('rows',[]): D['sfx'].append(['tick',r['t'],-18])
+
+def ticker(s,e,lines,tone='dark'):
+  # băng chữ chạy (thay cho cover): đặt trên đầu nếu đủ chỗ, không thì trên ngực ngay trên phụ đề; không bao giờ đè mặt
+  fb=faceU(s,e); nb=len(lines); H=74; G=12
+  top=252; need=nb*H+(nb-1)*G
+  if fb[1]-10-top>=need: y=top
+  elif fb[1]-10-top>=H: lines=lines[:1]; nb=1; y=top
+  elif fb[3]+12+need<=SUBTOP-6: y=SUBTOP-6-need
+  elif fb[3]+12+H<=SUBTOP-6: lines=lines[:1]; nb=1; y=SUBTOP-6-H
+  else: lines=lines[:1]; nb=1; y=248; print('ticker tight',lines,round(s,1),[round(v) for v in fb])
+  lines=[l.upper() for l in lines]
+  for o in D['tickers']:
+    if o['s']<s<o['e'] and abs(o['y']-y)<160: o['e']=s
+  D['tickers'].append(dict(s=s,e=e,y=round(y),lines=lines,tone=tone)); SFXI('swish_ticker',s-0.05,-15)
+  print('TICKER',round(s,1),round(e,1),y,lines)
 def punch(t,amt=0.05,hold=20): D['punches'].append(dict(t=t,amt=amt,hold=hold))
 SFXI=lambda n,t,db: D['sfx'].append([n,t,db])
 
@@ -118,8 +134,8 @@ for i in (8,11,14): D['noteHi'].append(dict(s=S(i)-0.1,e=W[i][-1][1]+0.6))
 
 # ---- 0 HOOK 0–7.57
 D['flashes'].append(dict(t=0.0,op=0.9)); SFXI('hit_soft',0.05,-12)
-D['covers'].append(dict(s=0.0,e=at(0,'giảm')-0.05,small='Deal đáng mua nhất',lines=['BLACK','FRIDAY'],size=170,y=600,sub='−20% · Quà full size'))
-D['hideSubs'].append(dict(s=0,e=at(0,'giảm')-0.05)); SFXI('bass_drop',0.0,-16)
+D['covers'].append(dict(s=0.0,e=1.45,small='Deal đáng mua nhất',lines=['BLACK','FRIDAY'],size=170,y=600,sub='−20% · Quà full size'))
+D['hideSubs'].append(dict(s=0,e=1.45)); SFXI('bass_drop',0.0,-14)
 punch(at(0,'Black'),0.05,18)
 chips(at(0,'giảm'),at(0,'Cùng')-0.1,[dict(text='−20%',sub='Giảm giá',t=at(0,'giảm'),side=-1,y=1010,size=46),
                                        dict(text='Quà full size',sub='Theo danh sách quà',t=at(0,'tặng'),side=1,y=1150)])
@@ -140,7 +156,7 @@ def brand(s,e,key,name,tag,kicker,**kw):
 brand(12.0,13.75,'burberry','BURBERRY','−20% · Quà full size','01 / 04')
 D['chapters'].append(dict(s=13.75,e=25.75,num='01',name='BURBERRY'))
 title(13.75,18.75,'BURBERRY',small='Ưu đãi tại',size=150)
-info(14.0,18.7,1000,label='Burberry · Black Friday',big='−20%',bigSub='nước hoa',
+info(14.0,18.7,1000,label='Burberry · Black Friday',ticker=['BURBERRY −20% · BLACK FRIDAY','HĐ SAU GIẢM 5–8 TRIỆU · TẶNG QUÀ FULL SIZE'],big='−20%',bigSub='nước hoa',
      rows=[dict(t=at(2,'hóa đơn'),text='Hóa đơn sau giảm 5 – 8 triệu'),dict(t=at(2,'tặng'),text='Tặng quà full size',icon='gift',strong=1)])
 SFXI('cash_kaching',14.1,-19)
 # 00:20 ICON
@@ -154,7 +170,7 @@ SFXI('ding_luxury',at(3,'Hero')-0.1,-16); punch(at(3,'Goddess'),0.04,16)
 brand(25.8,27.7,'chloe','CHLOÉ','−20% · Quà full size','02 / 04')
 D['chapters'].append(dict(s=27.7,e=44.75,num='02',name='CHLOÉ'))
 title(27.7,36.45,'CHLOÉ',small='Ưu đãi tại',size=170)
-info(27.9,at(4,'Nói')-0.05,1000,label='Chloé · Black Friday',big='−20%',bigSub='nước hoa',
+info(27.9,at(4,'Nói')-0.05,1000,label='Chloé · Black Friday',ticker=['CHLOÉ −20% · BLACK FRIDAY','HĐ 5–8 TRIỆU · TẶNG QUÀ FULL SIZE'],big='−20%',bigSub='nước hoa',
      rows=[dict(t=at(4,'hóa đơn'),text='Hóa đơn 5 – 8 triệu'),dict(t=at(4,'tặng'),text='Tặng quà full size',icon='gift',strong=1)])
 SFXI('cash_kaching',28.0,-19)
 chips(at(4,'Nói'),36.45,[dict(text='Quầy nào cũng có quà',sub='Mùa Black Friday',t=at(4,'mua'),side=1,y=1180)])
@@ -169,12 +185,12 @@ SFXI('sparkle_long',at(5,'ADF'),-17); punch(at(5,'ADF'),0.05,20)
 brand(44.8,46.6,'bvlgari','BVLGARI','−20% · Quà theo danh sách','03 / 04')
 D['chapters'].append(dict(s=46.6,e=79.5,num='03',name='BVLGARI'))
 title(46.6,53.85,'BVLGARI',small='Ưu đãi tại',size=160)
-info(46.8,53.85,1000,label='Bvlgari · Black Friday',big='−20%',bigSub='nước hoa',
+info(46.8,53.85,1000,label='Bvlgari · Black Friday',ticker=['BVLGARI −20% · CÓ QUÀ FULL SIZE','QUÀ THEO DANH SÁCH CỦA CỬA HÀNG'],big='−20%',bigSub='nước hoa',
      rows=[dict(t=at(7,'quà'),text='Có quà tặng full size',icon='gift'),dict(t=at(8,'theo'),text='Quà theo danh sách của cửa hàng',strong=1,size=34)])
 SFXI('cash_kaching',46.9,-19)
 # lưu ý quà 53.88–64.3
 title(53.9,64.25,'QUÀ TẶNG',small='Lưu ý nhỏ',size=150)
-info(54.0,64.25,930,dark=1,label='Quà tặng full size',
+info(54.0,64.25,930,dark=1,label='Quà tặng full size',ticker=['QUÀ FULL SIZE · HĐ 5–8 TRIỆU','CHỌN THEO DANH SÁCH QUÀ CỦA CỬA HÀNG'],
      rows=[dict(t=S(9)+0.2,text='Các quầy khác cũng −20% & có quà'),dict(t=at(12,'5'),text='Hóa đơn 5 – 8 triệu'),
            dict(t=at(13,'nhận'),text='Nhận quà full size',icon='gift'),dict(t=at(14,'list'),text='Chọn theo danh sách quà của cửa hàng',strong=1,size=34)])
 D['noteHide'].append(dict(s=53.9,e=64.3)); SFXI('chime_double',at(14,'list'),-18)
@@ -186,23 +202,23 @@ punch(at(17,'Omnia'),0.04,16)
 title(75.85,79.5,'ALLEGRA',small='Mới ra mắt',size=160)
 chips(at(19,'Baciami'),79.5,[dict(text='Allegra Baciami',tag='NEW',sub='Mới ra luôn',t=at(19,'Baciami'),side=1,y=1120)])
 SFXI('sparkle_long',at(19,'Baciami'),-18)
-info(at(19,'Baciami'),79.45,1000,label='Bvlgari · Mới ra mắt',big='Allegra Baciami',bigSize=70)
+info(at(19,'Baciami'),79.45,1000,label='Bvlgari · Mới ra mắt',ticker=['ALLEGRA BACIAMI · MỚI RA MẮT'],big='Allegra Baciami',bigSize=70)
 
 # ---- GUCCI 79.57–99.37
-brand(79.57,81.4,'gucci','GUCCI BEAUTY','−20% · Bốc thăm trúng quà','04 / 04',nameSize=86)
+brand(79.57,81.4,'gucci','GUCCI BEAUTY','−20% · Bốc thăm trúng quà','04 / 04',nameSize=70)
 D['chapters'].append(dict(s=81.4,e=99.3,num='04',name='GUCCI BEAUTY'))
 title(81.4,S(21)-0.05,'GUCCI',small='Ưu đãi tại',size=170)
-info(81.5,S(21)-0.05,1010,label='Gucci Beauty · Black Friday',big='−20%',bigSub='tất cả sản phẩm')
+info(81.5,S(21)-0.05,1010,label='Gucci Beauty · Black Friday',ticker=['GUCCI BEAUTY −20% · TẤT CẢ SẢN PHẨM','BỐC THĂM TRÚNG QUÀ'],big='−20%',bigSub='tất cả sản phẩm')
 SFXI('cash_kaching',81.6,-19)
 title(S(21),91.6,'BỐC THĂM',small='Đặc biệt',size=150)
 SFXI('riser',S(21)-0.6,-20)
-info(at(21,'không'),91.6,1000,label='Bốc thăm may mắn',big='100%',bigSub='trúng quà',
+info(at(21,'không'),91.6,1000,label='Bốc thăm may mắn',ticker=['BỐC THĂM TRÚNG 100%','QUÀ TÙY MÓN BẠN BỐC ĐƯỢC'],big='100%',bigSub='trúng quà',
      rows=[dict(t=at(22,'Tùy'),text='Quà tùy theo món bạn bốc được',icon='gift')])
 SFXI('success_arp',at(21,'trúng'),-16); punch(at(21,'trúng'),0.05,18)
 title(91.65,94.65,'ĐIỀU KIỆN',small='Bốc thăm',size=150)
-info(at(23,'điều kiện'),94.65,1040,label='Điều kiện bốc thăm',rows=[dict(t=at(23,'hóa đơn'),text='Hóa đơn sau giảm trên 5 triệu',strong=1)])
+info(at(23,'điều kiện'),94.65,1040,label='Điều kiện bốc thăm',ticker=['ĐIỀU KIỆN BỐC THĂM · HĐ SAU GIẢM TRÊN 5 TRIỆU'],rows=[dict(t=at(23,'hóa đơn'),text='Hóa đơn sau giảm trên 5 triệu',strong=1)])
 title(94.7,99.3,'SON GUCCI',small='Mọi người đang đợi',size=140,force=1)
-info(at(24,'20%')-0.1,99.3,1000,label='Son Gucci',big='−20%',bigSub='chỉ còn 9xx.000đ')
+info(at(24,'20%')-0.1,99.3,1000,label='Son Gucci',ticker=['SON GUCCI −20% · CHỈ CÒN 9XX.000Đ'],big='−20%',bigSub='chỉ còn 9xx.000đ')
 SFXI('cash_kaching',at(24,'20%'),-20)
 
 # ---- TỔNG KẾT 99.37–118.46
@@ -261,21 +277,20 @@ def card_h(c):
   h=56+(40 if c.get('label') else 0)+((c.get('bigSize',112)+6) if c.get('big') else 0)
   for r in c.get('rows',[]): h+=r.get('size',36)*1.25+14
   return h
-for c in D['infos']+[dict(t,_tl=1) for t in []]:
-  x0,x1,y0,y1=face(c['s'],c['e']); h=card_h(c)
-  if c['y']<y1:
-    ny=int(y1+18)
-    if ny+h<=SUB_TOP: c['y']=ny; print('info moved',c.get('label'),ny)
-    else:
-      c['cover']=1; c['y']=int(1000-h/2)
-      last=max([c['s']]+[r['t'] for r in c.get('rows',[])])
-      c['e']=min(c['e'],max(c['s']+3.4,last+1.8)); print('info COVER',c.get('label'),round(c['e']-c['s'],1))
-for t in D['timelines']:
-  x0,x1,y0,y1=face(t['s'],t['e'])
-  if t['y']<y1:
-    if y1+18+175<=SUB_TOP: t['y']=int(y1+18)
-    else: t['cover']=1; t['y']=930
-    print('timeline',t)
+for t in list(D['timelines']):
+  fb=faceU(t['s'],t['e'])
+  if hit([100,t['y'],860,t['y']+180],fb):
+    D['timelines'].remove(t); ticker(t['s'],t['e'],['THỜI GIAN · 20.11 → 30.11'],tone='light')
+# tiêu đề sau người trùng giờ với băng chữ trên đầu -> hạ tiêu đề xuống dưới băng, bỏ dòng nhỏ
+for t in D['tickers']:
+  if t['y']>=330: continue
+  bot=t['y']+len(t['lines'])*86
+  for L in (D['titles'],D['titlesFront']):
+    for ti in list(L):
+      if ti['s']<t['e'] and t['s']<ti['e']:
+        if ti['e']-t['e']>=1.5 and ti['s']>=t['s']-0.2: ti['s']=t['e']+0.1
+        elif ti['s']<t['s']-0.2 and t['s']-ti['s']>=1.5: ti['e']=t['s']-0.1
+        else: L.remove(ti)
 mx=max(h[2]+1.2*h[3] for h in head)
 print('face bottom max',round(mx), 'frames face>subs', sum(1 for h in head if h[2]+1.2*h[3]>SUB_TOP+10))
 
@@ -310,6 +325,26 @@ for l in lines:
     if fb<1422: D['subY'].append(dict(s=l['s'],e=l['e'],y=1395)); D['noteHide'].append(dict(s=l['s']-0.05,e=l['e']+0.05))
     else: bad+=1; print('SUB on face',l['s'],round(fb))
 print('subs low',len(D['subY']),'bad',bad)
+# ---- SFX v3: thay âm thanh đơn điệu bằng bộ đặc sắc hơn
+ev=[]; pk=0
+bs={round(b['s'],2) for b in D['brands']}
+for n,t,db in D['sfx']:
+  if n=='whoosh_soft' and any(abs(t+0.3-b)<0.05 for b in bs): ev.append(['boom_reveal',t+0.3-0.72,-9]); continue
+  if n=='shimmer' and any(abs(t-0.35-b)<0.05 for b in bs): continue
+  if n=='pop_soft': pk=pk%4+1; ev.append([f'pluck_{pk}',t,-14]); continue
+  if n=='cash_kaching': ev+= [['price_slam',t-0.2,-12],['cash_kaching',t+0.25,-20]]; continue
+  if n=='riser': continue
+  if n=='success_arp' and t<100: ev+= [['drumroll_crash',t-1.6,-12],['tada_short',t+0.05,-15]]; continue
+  if n=='success_arp': ev+= [['tada_short',t,-13],['glass_clink',t+0.5,-17]]; continue
+  if n=='sparkle_long' and t>110: ev.append(['jingle',t,-13]); continue
+  if n=='tick': ev.append(['bubble_seq',t-0.05,-19]); continue
+  ev.append([n,t,db])
+last=-9
+for l in D['lines']:
+  for w in l['words']:
+    if w['key'] and w['s']-last>0.9 and not any(a<=w['s']<b for a,b in [(x['s'],x['e']) for x in D['brands']+D['endcards']]):
+      ev.append(['tick',w['s'],-25]); last=w['s']
+D['sfx']=ev
 os.makedirs(os.path.dirname(OUT),exist_ok=True)
 json.dump(D,open(OUT,'w'),ensure_ascii=False)
 json.dump(D['sfx'],open('/root/bb/sfx_events.json','w'))

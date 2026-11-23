@@ -47,3 +47,11 @@ Model tách nền: rembg tự tải u2net_human_seg (~176MB) vào ~/.rembg/model
 - Darren xác nhận: Chloé "Signature, Nomade" + dòng Atelier des Fleurs (ghi đủ tên, không viết ADF trơn); Bvlgari Man Rain Essence, Omnia, Allegra Baciami; son Gucci −20% "còn 9 trăm mấy" (9xx.000đ).
 - v2 (Darren 23/11): cover full màn quá nhiều làm mất hình Darren → chỉ giữ cover ảnh quầy + hook 1.45 s. Thẻ/tiêu đề đụng mặt → **băng chữ chạy** (Ticker, kính mờ, 1–2 dòng chạy ngược chiều, mở bằng wipe) ở trên đầu (y≈252) hoặc trên ngực ngay trên phụ đề; tiêu đề sau người trùng giờ với băng chữ thì dời giờ/bỏ. Chữ hoa tiếng Việt bị cắt dấu khi overflow hidden → paddingTop 0.36em + marginTop âm.
 - SFX v3 (`scripts/sfx3.py`): boom_reveal (hút ngược + sub boom, mở ảnh quầy), drumroll_crash + tada_short (bốc thăm), price_slam (giá giảm), pluck_1..4 xoay vòng cho nhãn, swish_ticker, jingle (holiday), bubble_seq; tick rất nhỏ (-25 dB) ở từ khóa phụ đề để có nhịp.
+
+## Style "Bvlgari Holiday 2026" – gift set (23/11/2026)
+- Code: `remotion/src/bvlgari/Bv.tsx` (comp `BvGift`, entry `src/bvlgari/index.ts`), dữ liệu `scripts/data_bvlgari_gift.py`, lời `scripts/align_bvlgari_gift.py`.
+- Họa tiết theo bao bì nước hoa Bvlgari Holiday 2026: bầu trời sao + pháo hoa vàng, sao 8 cánh, lưới Pantheon. Chuyển cảnh: SkyWipe (màn trời sao xanh đêm quét chéo + pháo hoa + tên chương, giữ ~1 s), StarWipe (sao 8 cánh vàng phóng to rồi mở cảnh mới qua lỗ hình sao), MeshWipe (ô Pantheon lật). Chữ: Noto Serif Display vàng gradient + Be Vietnam Pro; xanh navy #0E1936 / vàng #D9B76C.
+- Clip quay cận (mặt chiếm gần hết khung) → không tách nền, không tiêu đề sau người; head track lấy từ Haar (lọc hộp mặt sai: w lệch >30% median, tâm lệch >0.45w). Thẻ sản phẩm đặt thấp sát phụ đề (subTop 1360), hiện ~3.4 s rồi thu thành tag nhỏ ở mép.
+- B-roll Darren gửi (lia quầy 3.3 s) làm hook, playbackRate 0.67. Đoạn không lời khoe hộp quà: SFX `musicbox` (hộp nhạc) + sao nhấp nháy.
+- SFX thêm trong sfx3.py: firework, musicbox. Render 162 s phải chia ≤1400 frame/lần (timeout lệnh 10 phút).
+- Darren xác nhận: Man Rain Essence, Man Wood Essence (cả đoạn 00:21–00:36), Pour Homme, Eau Parfumée Thé Blanc/Thé Vert, Omnia Crystalline EDT (hand cream + chai mini), Omnia Crystalline EDP (hoa nhài, gỗ đàn hương), Omnia Amethyste.

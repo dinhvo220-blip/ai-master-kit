@@ -88,3 +88,23 @@ for k in range(5):
     x[i:i + n] += np.sin(2 * np.pi * (500 + k * 180 + 1400 * tt / 0.06) * tt) * env(n, 0.001, 0.02)
 save('bubble_seq', x, 0.6)
 print('sfx3 ok')
+# 9. firework: tiếng huýt bay lên + nổ lách tách (chuyển cảnh trời sao Bvlgari)
+t = T(0.45); wh = np.sin(2 * np.pi * np.cumsum(900 + 1800 * (t / .45)) / SR) * (t / .45) * 0.25 + lp(rng.standard_normal(len(t)), 6) * 0.08 * (t / .45)
+tb = T(1.6); pop = np.sin(2 * np.pi * (110 * np.exp(-tb * 18) + 50) * tb) * env(len(tb), 0.001, 0.12) + rng.standard_normal(len(tb)) * env(len(tb), 0.0005, 0.03) * 0.8
+cr = np.zeros(len(tb))
+for k in range(70):
+    i = int((0.08 + rng.exponential(0.35)) * SR)
+    if i >= len(tb) - 400: continue
+    n = 300; cr[i:i + n] += rng.standard_normal(n) * np.exp(-np.arange(n) / 60) * rng.uniform(0.1, 0.4) * np.exp(-i / SR / 0.7)
+save('firework', reverb(np.concatenate([wh, pop + cr]), 1.2, 0.3), 1.0)
+print('firework ok')
+
+
+# 10. musicbox: hộp nhạc leng keng ~5s (khoe hộp quà, không lời)
+notes=[(0,1319),(0.32,1568),(0.64,1976),(0.96,2637),(1.44,2349),(1.76,1976),(2.08,1568),(2.56,1760),(2.88,2093),(3.2,2637),(3.68,3136),(4.3,2637)]
+t = T(5.6); x = np.zeros(len(t))
+for st,fq in notes:
+    i=int(st*SR); tt=np.arange(len(t)-i)/SR
+    x[i:] += (np.sin(2*np.pi*fq*tt)+0.25*np.sin(2*np.pi*fq*2.01*tt)+0.1*np.sin(2*np.pi*fq*3.98*tt))*np.exp(-tt/0.7)*np.minimum(1,tt/0.002)*0.25
+save('musicbox', reverb(x, 1.6, 0.35), 0.9)
+print('musicbox ok')

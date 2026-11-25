@@ -25,3 +25,6 @@ remotion/src/chloe/talk_sfx.json
 remotion/public/chloe_base.mp4
 remotion/public/chloe_person.webm
 remotion/public/chloe/paris_*.jpg
+remotion/src/gucci/talk.json
+remotion/src/gucci/talk_sfx.json
+remotion/public/gucci_*

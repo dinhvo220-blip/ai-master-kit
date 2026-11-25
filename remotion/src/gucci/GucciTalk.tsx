@@ -4,6 +4,7 @@
 import React from 'react';
 import {AbsoluteFill, OffthreadVideo, staticFile, useCurrentFrame, interpolate, Easing, delayRender, continueRender} from 'remotion';
 import {loadFonts} from '../fonts';
+import {loadSerif} from '../chloe/Chloe';
 import data from './talk.json';
 const D: any = data;
 const FPS = 30;
@@ -45,53 +46,61 @@ const cardP = (fr: number) => {
   return 0;
 };
 
-// ---------- một dòng chữ ----------
-const ST: any = {
-  big: {font: COND, size: 150, w: 520, grad: [G.green, G.green2], glow: 1},
-  mid: {font: COND, size: 112, w: 520, grad: [G.green, G.green2], glow: 1},
-  num: {font: COND, size: 168, w: 640, grad: [G.gold, G.gold2], glow: 1},
-  small: {font: SANS, size: 40, w: 400, color: G.ink},
-  light: {font: SANS, size: 34, w: 300, color: 'rgba(38,35,31,0.62)'},
+// ---------- chữ v2 (theo mẫu): sans nhỏ lệch trái · serif nghiêng chữ thường · sans nhỏ lệch phải; chữ khối sau đầu ----------
+const SERIF = 'NotoSerifDisplay';
+const GLOW = 'drop-shadow(0 0 7px rgba(255,255,255,0.95)) drop-shadow(0 0 22px rgba(255,255,255,0.75))';
+const ap = (fr: number, d: number, e: number) => {
+  const p = inP(fr, d, 14);
+  const x = interpolate(fr, [f(e) - 8, f(e)], [0, 1], {...cl, easing: Easing.in(Easing.quad)});
+  return {o: Math.min(1, p * 1.3) * (1 - x), blur: (1 - p) * 12 + x * 10, y: (1 - p) * 16};
 };
-const Line: React.FC<{fr: number; l: any; end: number; i: number; onCard: boolean}> = ({fr, l, end, i, onCard}) => {
-  const s = ST[l.st];
-  const p = inP(fr, l.d, 16);
-  const x = interpolate(fr, [f(end) - 10, f(end)], [0, 1], {...cl, easing: Easing.in(Easing.cubic)});
-  if (p <= 0) return <div style={{height: 0}} />;
-  const blur = (1 - p) * 18 + x * 16;
-  const serif = s.font === COND;
-  const style: React.CSSProperties = {
-    fontFamily: s.font, fontWeight: s.w, fontSize: s.size, lineHeight: serif ? 1.05 : 1.2, whiteSpace: 'nowrap',
-    fontStyle: serif ? 'italic' : 'normal', fontStretch: serif ? '62.5%' : undefined, fontVariationSettings: serif ? "'wdth' 62.5" : undefined,
-    letterSpacing: serif ? `${-0.005 + (1 - p) * 0.08}em` : `${-0.035 + (1 - p) * 0.12}em`,
-    ...(serif ? {backgroundImage: `linear-gradient(180deg, ${s.grad[0]} 10%, ${s.grad[1]} 62%, ${s.grad[1]}88 100%)`, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', paddingTop: '0.3em', marginTop: '-0.3em', paddingRight: '0.08em'} : {color: s.color}),
-  };
-  const glow = onCard ? 'drop-shadow(0 0 14px rgba(255,255,255,0.9))' : 'drop-shadow(0 0 10px rgba(255,255,255,0.95)) drop-shadow(0 0 32px rgba(255,240,236,0.75))';
+const Piece: React.FC<{fr: number; d: number; e: number; children: React.ReactNode; style: React.CSSProperties; dx?: number}> = ({fr, d, e, children, style, dx = 0}) => {
+  if (d == null || fr < f(d)) return <div style={{...style, visibility: 'hidden'}}>{children}</div>;
+  const a = ap(fr, d, e);
+  return <div style={{...style, opacity: a.o, transform: `translate(${dx}px, ${a.y}px)`, filter: `blur(${a.blur}px) ${GLOW}`}}>{children}</div>;
+};
+const Beat: React.FC<{fr: number; b: any; onCard: boolean}> = ({fr, b, onCard}) => {
+  if (fr < f(b.s) - 1 || fr > f(b.e) + 1) return null;
+  const top = onCard ? 300 : 1095;
+  const small: React.CSSProperties = {fontFamily: SANS, fontWeight: 400, fontSize: 40, letterSpacing: '-0.04em', color: '#2A2622', lineHeight: 1.15, whiteSpace: 'nowrap'};
+  const serif: React.CSSProperties = {fontFamily: SERIF, fontStyle: 'italic', fontWeight: 500, fontSize: Math.min(124, 780 / (0.52 * b.serif.length)), letterSpacing: '-0.015em', color: G.green, lineHeight: 1.08, whiteSpace: 'nowrap', paddingTop: '0.22em', marginTop: '-0.22em'};
   return (
-    <div style={{position: 'relative', opacity: Math.min(1, p * 1.4) * (1 - x), transform: `translate(${x * -40}px, ${(1 - p) * 22}px) scaleX(${1 + x * 0.12})`, filter: `blur(${blur}px) ${glow}`, marginTop: serif ? -8 : i ? 2 : 0}}>
-      {x > 0.05 ? <div style={{...style, position: 'absolute', left: 30 * x, top: 0, opacity: 0.35, filter: 'blur(6px)'}}>{l.t}</div> : null}
-      <div style={style}>{l.t}</div>
+    <div style={{position: 'absolute', left: SAFE_L, width: SAFE_R - SAFE_L, top, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+      {b.a ? <Piece fr={fr} d={b.ad} e={b.e} style={small} dx={-110}>{b.a}</Piece> : null}
+      <Piece fr={fr} d={b.sd} e={b.e} style={serif}>{b.serif}</Piece>
+      {b.b ? <Piece fr={fr} d={b.bd} e={b.e} style={{...small, fontWeight: 300}} dx={130}>{b.b}</Piece> : null}
     </div>
   );
 };
-
-const Beat: React.FC<{fr: number; b: any; onCard: boolean}> = ({fr, b, onCard}) => {
-  if (fr < f(b.s) - 1 || fr > f(b.e) + 1) return null;
-  const top = onCard ? 300 : 262;
+const CardWord: React.FC<{fr: number}> = ({fr}) => {
+  const c = D.cards.find((x: any) => fr >= f(x.s) && fr <= f(x.e));
+  if (!c) return null;
+  const a = ap(fr, c.s + 0.25, c.e);
   return (
-    <div style={{position: 'absolute', left: SAFE_L, width: SAFE_R - SAFE_L, top, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
-      {b.lines.map((l: any, i: number) => <Line key={i} fr={fr} l={l} end={b.e} i={i} onCard={onCard} />)}
+    <div style={{position: 'absolute', left: SAFE_L, width: SAFE_R - SAFE_L, top: 700, textAlign: 'center', opacity: a.o, transform: `translateY(${a.y}px)`, filter: `blur(${a.blur}px)`}}>
+      <span style={{fontFamily: SANS, fontWeight: 900, fontSize: 150, letterSpacing: '-0.045em', color: '#FFFFFF', lineHeight: 1.1, whiteSpace: 'nowrap',
+        textShadow: '0 20px 40px rgba(28,58,42,0.45), 0 4px 14px rgba(28,58,42,0.3)'}}>{c.word}</span>
+    </div>
+  );
+};
+const Heavy: React.FC<{fr: number; b: any}> = ({fr, b}) => {
+  if (!b.heavy || fr < f(b.hd) || fr > f(b.e) + 1) return null;
+  const a = ap(fr, b.hd, b.e);
+  return (
+    <div style={{position: 'absolute', left: 0, width: 960, top: 335, textAlign: 'center', opacity: a.o, transform: `translateY(${a.y}px) scale(${1.04 - 0.04 * Math.min(1, a.o)})`, filter: `blur(${a.blur}px)`}}>
+      <span style={{fontFamily: SANS, fontWeight: 900, fontSize: 230, letterSpacing: '-0.045em', color: '#FFFFFF', lineHeight: 1.1, paddingTop: '0.25em',
+        textShadow: '0 22px 46px rgba(28,58,42,0.55), 0 6px 18px rgba(28,58,42,0.35)'}}>{b.heavy}</span>
     </div>
   );
 };
 
 const Subs: React.FC<{fr: number}> = ({fr}) => {
-  const t = fr / FPS; const cp = cardP(fr);
+  const t = fr / FPS; const cp = cardP(fr); const busy = cp < 0.5 && D.beats.some((b: any) => t >= b.sd && t < b.e);
   const s = D.subs.find((x: any) => t >= x.s && t < x.e);
   if (!s) return null;
   const o = Math.min(inP(fr, s.s, 5), interpolate(fr, [f(s.e) - 4, f(s.e)], [1, 0], cl));
   return (
-    <div style={{position: 'absolute', left: SAFE_L, width: SAFE_R - SAFE_L, top: 1440 + 40 * cp, display: 'flex', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 10, opacity: o,
+    <div style={{position: 'absolute', left: SAFE_L, width: SAFE_R - SAFE_L, top: busy ? 1488 : 1440 + 40 * cp, display: 'flex', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 10, opacity: o,
       filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.95)) drop-shadow(0 0 16px rgba(255,255,255,0.8))'}}>
       {s.words.map((w: any, i: number) => {
         const on = t >= w.s - 0.03;
@@ -104,7 +113,7 @@ const Subs: React.FC<{fr: number}> = ({fr}) => {
 };
 
 export const GucciTalk: React.FC = () => {
-  loadFonts(); loadCond();
+  loadFonts(); loadCond(); loadSerif();
   const fr = useCurrentFrame();
   const z = camScale(fr);
   const p = cardP(fr);
@@ -112,7 +121,7 @@ export const GucciTalk: React.FC = () => {
   const lay: React.CSSProperties = {transform: `translate(${CTX * p}px, ${CTY * p}px) scale(${1 - (1 - CS) * p})`, transformOrigin: '0 0'};
   const clip = p > 0 ? `inset(${CT * p}px ${50 * p}px ${30 * p}px ${50 * p}px round ${64 * p}px)` : undefined;
   const pclip = p > 0 ? `inset(0 0 ${(1920 - CT - 90) * p}px 0)` : undefined;
-  const behind = D.beats.filter((b: any) => b.behind), front = D.beats.filter((b: any) => !b.behind);
+  
   return (
     <AbsoluteFill style={{background: '#000'}}>
       {p > 0 ? <AbsoluteFill style={{opacity: Math.min(1, p * 1.5), background: `radial-gradient(ellipse 90% 60% at 50% 25%, #FFFDFB 0%, ${G.blush} 60%, #EBCFC7 100%)`}} /> : null}
@@ -121,14 +130,15 @@ export const GucciTalk: React.FC = () => {
           <OffthreadVideo src={staticFile('gucci_base.mp4')} muted style={{width: '100%', height: '100%', filter: GRADE}} />
         </AbsoluteFill></AbsoluteFill>
       </AbsoluteFill>
-      {behind.map((b: any, i: number) => <Beat key={i} fr={fr} b={b} onCard={false} />)}
+      {D.beats.map((b: any, i: number) => <Heavy key={i} fr={fr} b={b} />)}
+      <CardWord fr={fr} />
       <AbsoluteFill style={{clipPath: pclip}}>
         <AbsoluteFill style={lay}><AbsoluteFill style={cam}>
           <OffthreadVideo src={staticFile('gucci_person.webm')} muted transparent style={{width: '100%', height: '100%', filter: GRADE}} />
         </AbsoluteFill></AbsoluteFill>
       </AbsoluteFill>
       <AbsoluteFill style={{background: 'radial-gradient(circle at 20% 10%, rgba(255,240,232,0.3), transparent 45%)', mixBlendMode: 'screen'}} />
-      {front.map((b: any, i: number) => <Beat key={i} fr={fr} b={b} onCard={p > 0.5} />)}
+      {D.beats.map((b: any, i: number) => <Beat key={i} fr={fr} b={b} onCard={p > 0.5} />)}
       <Subs fr={fr} />
     </AbsoluteFill>
   );

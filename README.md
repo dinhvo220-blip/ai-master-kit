@@ -82,3 +82,11 @@ Model tách nền: rembg tự tải u2net_human_seg (~176MB) vào ~/.rembg/model
 - Phụ đề không hộp: chữ xanh rêu 600 38px + quầng trắng, từ khóa serif hẹp nghiêng vàng.
 - Tốc độ: matte u2net 1.07 s/mask → clip 127 s mất ~35 phút nếu 15 fps. Đã đổi: phần sau chạy 7.5 fps (bước 4 frame, masksB) + guided filter theo ảnh gốc vẫn giữ mép nét. KHÔNG render Remotion song song với matte/person (Chrome crash "Page crashed!" do thiếu RAM).
 - Darren xác nhận: son lì = Rouge à Lèvres Mat (Matte) màu 505 Janet Rust (best seller), son dưỡng có màu = Rouge de Beauté Brillant, Gucci Beauty 2 chi nhánh: Crescent Mall Q7 (HCM), Vincom Bà Triệu (Hà Nội); cả 2 có khắc tên.
+
+### Gucci Hà Nội v2 (25/11) – bài học
+- Chữ theo mẫu Darren: chồng 3 tầng (sans nhỏ lệch trái, serif nghiêng chữ thường Noto Serif Display màu xanh Gucci + glow trắng, sans nhỏ lệch phải) đặt TRƯỚC người ngang ngực → không còn bị mất chữ.
+- Chữ đậm sau đầu chỉ dùng ở vài beat có matte tốt (HÀ NỘI, −20%).
+- Matte: mask 15 fps (không dùng 7.5), isnet hợp u2net cho hook, guidedFilter r=7 eps=3e-3 + EMA 0.65/0.35 → tóc mượt.
+- Serif tự co: fontSize = min(124, 780/(0.52*số ký tự)) để câu dài không tràn mép.
+- Card layout: thêm CardWord lớn để phần trên thẻ không trống.
+- Sửa đoạn ngắn: render --frames từng đoạn, cắt phần còn lại bằng select, concat demuxer rồi re-encode với setpts=N/30/TB (concat -c copy làm hỏng timestamp; filter trim nhiều lần trên 1 input bị OOM).

@@ -20,3 +20,7 @@ remotion/public/chloe/
 remotion/src/chloe/chloe.json
 remotion/src/chloe/voice.wav
 remotion/src/chloe/sfx.json
+remotion/src/chloe/talk.json
+remotion/src/chloe/talk_sfx.json
+remotion/public/chloe_base.mp4
+remotion/public/chloe_person.webm

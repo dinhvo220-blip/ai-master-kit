@@ -93,7 +93,7 @@ const Leak: React.FC<{fr: number; at: number}> = ({fr, at}) => {
   const v = interpolate(fr, [at - 9, at, at + 10], [0, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
   if (v <= 0) return null;
   const x = interpolate(fr, [at - 9, at + 10], [-300, 1300]);
-  return <AbsoluteFill style={{mixBlendMode: 'screen', opacity: v}}>
+  return <AbsoluteFill style={{mixBlendMode: 'screen', opacity: v * 0.55}}>
     <div style={{position: 'absolute', left: x - 700, top: -200, width: 1400, height: 2300, transform: 'rotate(18deg)',
       background: 'radial-gradient(ellipse 40% 50% at 50% 50%, rgba(255,214,140,1) 0%, rgba(230,150,60,.75) 35%, rgba(120,60,10,0) 75%)'}} />
   </AbsoluteFill>;
@@ -179,8 +179,7 @@ const Scene34: React.FC<{fr: number}> = ({fr}) => {
   return <AbsoluteFill style={{background: INK}}>
     <Photo src="kerala.jpg" fr={fr} a={S3 - 10} b={S4 + 14} z0={1.0} z1={1.12} filt="saturate(1.05) contrast(1.04)" ox="50% 45%" />
     {/* rừng gia vị → dây tiêu: lộ dần bằng vòng mở từ tâm (iris mềm) */}
-    <AbsoluteFill style={{WebkitMaskImage: `radial-gradient(circle at 55% 48%, #000 ${x4 * 140 - 10}%, transparent ${x4 * 140 + 8}%)`,
-      maskImage: `radial-gradient(circle at 55% 48%, #000 ${x4 * 140 - 10}%, transparent ${x4 * 140 + 8}%)`}}>
+    <AbsoluteFill style={{opacity: x4, filter: x4 < 0.999 ? `blur(${(1 - x4) * 8}px)` : undefined}}>
       <Photo src="pepper.jpg" fr={fr} a={S4 - 8} b={S5 + 10} z0={1.08} z1={1.0} filt="saturate(1.08) contrast(1.05)" ox="42% 60%" />
     </AbsoluteFill>
     {/* gradient tối phía trên + dưới để chữ đọc được, ảnh vẫn rõ */}
@@ -270,36 +269,30 @@ const Scene5: React.FC<{fr: number}> = ({fr}) => {
 export const Tygar: React.FC = () => {
   loadFonts(); loadSerif();
   const fr = useCurrentFrame();
-  // video gốc: zoom-blur trước khi vào cover, và sau khi ra
-  const vin = ip(fr, IN - 9, IN + 1, 0, 1, Easing.in(Easing.cubic));
-  const vout = ip(fr, OUT - 2, OUT + 12, 1, 0, Easing.out(Easing.cubic));
-  const vv = fr < IN + 5 ? vin : vout;
-  const showCover = fr >= IN - 8 && fr < OUT + 12;
-  // cover: mở bằng iris tròn từ tâm; ra bằng zoom-through + mờ dần
-  const iris = ip(fr, IN - 8, IN + 10, 0, 1, Easing.inOut(Easing.cubic));
-  const outP = ip(fr, OUT - 4, OUT + 12, 0, 1, Easing.in(Easing.cubic));
-  const scene = fr < S2 ? <Scene1 fr={fr} /> : fr < S3 ? <Scene2 fr={fr} /> : fr < S5 ? <Scene34 fr={fr} /> : <Scene5 fr={fr} />;
-  // chuyển cảnh trong: S1→S2 light leak, S2→S3 whip, S4→S5 dip đen
-  const whip = interpolate(fr, [S3 - 6, S3, S3 + 8], [0, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.inOut(Easing.cubic)});
-  const whipX = fr < S3 ? -whip * 420 : whip * 420;
-  const dip = interpolate(fr, [S5 - 7, S5, S5 + 9], [0, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const sm = Easing.inOut(Easing.cubic);
+  // vào/ra: hoà tan chéo + zoom + nhòe (mượt, không lộ hình tròn)
+  const cin = ip(fr, IN - 10, IN + 6, 0, 1, sm);
+  const cout = ip(fr, OUT - 4, OUT + 10, 0, 1, sm);
+  const cov = Math.min(cin, 1 - cout);
+  const vz = 1 - cov; // video phía dưới
+  // cảnh: hoà tan chéo 12 frame ở mỗi ranh giới
+  const X = 6;
+  const w = (a: number, b: number, first = false, last = false) =>
+    Math.min(first ? 1 : ip(fr, a - X, a + X, 0, 1, sm), last ? 1 : ip(fr, b - X, b + X, 1, 0, sm));
+  const layers: [number, React.ReactNode, number][] = [
+    [w(IN, S2, true), <Scene1 fr={fr} />, IN],
+    [w(S2, S3), <Scene2 fr={fr} />, S2],
+    [w(S3, S5), <Scene34 fr={fr} />, S3],
+    [w(S5, OUT, false, true), <Scene5 fr={fr} />, S5],
+  ];
   return <AbsoluteFill style={{background: '#000'}}>
-    <svg width={0} height={0} style={{position: 'absolute'}}><defs><filter id="hblur"><feGaussianBlur stdDeviation={`${whip * 60} 0`} /></filter></defs></svg>
-    <AbsoluteFill style={{transform: `scale(${1 + 0.12 * vv})`, filter: `blur(${14 * vv}px) brightness(${1 + 0.18 * vv})`}}>
+    <AbsoluteFill style={{transform: `scale(${1 + 0.07 * (fr < IN + 8 ? cin : 1 - cout)})`, filter: `blur(${10 * (fr < IN + 8 ? cin : 1 - cout)}px)`}}>
       <OffthreadVideo src={staticFile('tygar/seg.mp4')} muted />
     </AbsoluteFill>
-    {showCover && <AbsoluteFill style={{
-      WebkitMaskImage: iris < 1 ? `radial-gradient(circle at 50% 60%, #000 ${iris * 120 - 6}%, transparent ${iris * 120 + 6}%)` : undefined,
-      maskImage: iris < 1 ? `radial-gradient(circle at 50% 60%, #000 ${iris * 120 - 6}%, transparent ${iris * 120 + 6}%)` : undefined,
-      opacity: 1 - outP, transform: `scale(${1 + outP * 1.4})`, transformOrigin: '480px 620px', filter: outP > 0 ? `blur(${outP * 16}px)` : undefined}}>
-      <AbsoluteFill style={{transform: `translateX(${whipX}px) scale(${1 + whip * 0.5})`, filter: whip > 0.02 ? 'url(#hblur)' : undefined}}>
-        {scene}
-      </AbsoluteFill>
+    {cov > 0.001 && <AbsoluteFill style={{opacity: cov, transform: `scale(${fr < IN + 8 ? 1.08 - 0.08 * cin : 1 + 0.06 * cout})`, filter: cov < 0.999 ? `blur(${(1 - cov) * 12}px)` : undefined}}>
+      <AbsoluteFill style={{background: INK}} />
+      {layers.map(([o, node, a], k) => o > 0.001 ? <AbsoluteFill key={k} style={{opacity: o, transform: `scale(${1 + (1 - o) * (fr < a ? -0.0 : 0.03)})`, filter: o < 0.999 ? `blur(${(1 - o) * 8}px)` : undefined}}>{node}</AbsoluteFill> : null)}
       <Leak fr={fr} at={S2} />
-      <AbsoluteFill style={{background: '#000', opacity: dip}} />
     </AbsoluteFill>}
-    {/* chớp sáng mềm lúc ra */}
-    <AbsoluteFill style={{background: 'radial-gradient(circle at 50% 35%, rgba(255,236,196,.9), rgba(255,236,196,0) 65%)',
-      opacity: interpolate(fr, [OUT - 2, OUT + 3, OUT + 12], [0, 0.55, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}), mixBlendMode: 'screen'}} />
   </AbsoluteFill>;
 };

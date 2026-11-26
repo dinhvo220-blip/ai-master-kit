@@ -46,18 +46,20 @@ const goldText: React.CSSProperties = {background: `linear-gradient(180deg, ${GO
 
 // chữ khổng lồ sau đầu, 2 tầng: dòng nhỏ + từ khóa (mask-slide + blur)
 const BigWord: React.FC<{fr: number; s: number; e: number; small: string; word: string; serif?: boolean; size?: number; top?: number}> = ({fr, s, e, small, word, serif, size, top = 300}) => {
-  if (!on(fr, s, e)) return null;
-  const a = life(fr, s, e, 9, 6);
-  const y = ip(fr, f(s), f(s) + 9, 60, 0);
-  const bl = ip(fr, f(s), f(s) + 9, 14, 0);
-  const out = ip(fr, f(e) - 6, f(e), 0, 1, EOUT);
+  if (!on(fr, s, e + 0.3)) return null;
+  const S = f(s), E = f(e);
+  const pin = ip(fr, S, S + 14);                       // vào 14 frame, easing mềm
+  const pout = ip(fr, E - 4, E + 8, 0, 1, Easing.inOut(Easing.cubic)); // ra 12 frame, chồng sang từ sau
   const fs = size ?? Math.min(serif ? 300 : 340, 860 / (0.56 * word.length));
+  const sm = ip(fr, S + 2, S + 14);
   return (
-    <div style={{position: 'absolute', left: SAFE.l, right: SAFE.r, top, textAlign: 'center', opacity: a}}>
-      <div style={{fontFamily: SANS, fontWeight: 500, fontSize: 38, letterSpacing: '-0.01em', color: '#2A170A', opacity: ip(fr, f(s) + 3, f(s) + 12), textShadow: '0 0 14px rgba(255,240,215,.55)'}}>{small}</div>
-      <div style={{overflow: 'visible', marginTop: serif ? -10 : -30}}>
-        <div style={{...darkText, fontFamily: serif ? SERIF : SANS, fontStyle: serif ? 'italic' : 'normal', fontWeight: serif ? 500 : 800, fontSize: fs, lineHeight: 1.02, whiteSpace: 'nowrap', letterSpacing: serif ? '-0.01em' : '-0.05em',
-          transform: `translateY(${y - out * 40}px)`, filter: `blur(${bl + out * 10}px) drop-shadow(0 0 18px rgba(255,238,210,.55))`, fontVariantNumeric: 'lining-nums'}}>{word}</div>
+    <div style={{position: 'absolute', left: SAFE.l - 40, right: SAFE.r - 40, top, textAlign: 'center', opacity: 1 - pout,
+      filter: `blur(${pout * 12}px)`, transform: `translateY(${-pout * 18}px) scale(${1 + pout * 0.04})`}}>
+      <div style={{fontFamily: SANS, fontWeight: 500, fontSize: 38, letterSpacing: `${interpolate(sm, [0, 1], [0.25, -0.01])}em`, color: '#2A170A', opacity: sm, textShadow: '0 0 14px rgba(255,240,215,.55)'}}>{small}</div>
+      <div style={{overflow: 'hidden', paddingTop: '0.42em', marginTop: serif ? '-0.5em' : '-0.62em', paddingBottom: '0.12em'}}>
+        <div style={{...darkText, fontFamily: serif ? SERIF : SANS, fontStyle: serif ? 'italic' : 'normal', fontWeight: serif ? 500 : 800, fontSize: fs, lineHeight: 1.02, whiteSpace: 'nowrap',
+          letterSpacing: `${interpolate(pin, [0, 1], [serif ? 0.06 : -0.02, serif ? -0.01 : -0.05])}em`,
+          transform: `translateY(${(1 - pin) * 105}%)`, filter: `blur(${(1 - pin) * 6}px) drop-shadow(0 0 18px rgba(255,238,210,.55))`, fontVariantNumeric: 'lining-nums'}}>{word}</div>
       </div>
     </div>
   );
@@ -84,7 +86,7 @@ const Glass: React.FC<{fr: number; s: number; e: number; top: number; icon: Reac
 const Pill: React.FC<{fr: number; s: number; e: number; x: number; y: number; text: string; dark?: boolean}> = ({fr, s, e, x, y, text, dark}) => {
   if (!on(fr, s, e)) return null;
   const a = life(fr, s, e, 10, 6);
-  return <div style={{position: 'absolute', left: x, top: y, transform: `translate(-50%,0) scale(${ip(fr, f(s), f(s) + 10, 0.85, 1)})`, opacity: a, padding: '12px 26px', borderRadius: 40,
+  return <div style={{position: 'absolute', left: x, top: y, transform: `translate(-50%, ${ip(fr, f(s), f(s) + 12, 18, 0)}px)`, filter: `blur(${ip(fr, f(s), f(s) + 10, 6, 0)}px)`, opacity: a, padding: '12px 26px', borderRadius: 40,
     background: dark ? 'rgba(13,10,7,.72)' : `linear-gradient(135deg, ${GOLD_L}, ${GOLD})`, color: dark ? GOLD_L : INK, fontFamily: SANS, fontWeight: 700, fontSize: 30, letterSpacing: '0.02em', whiteSpace: 'nowrap',
     border: dark ? `1px solid ${GOLD}` : 'none', boxShadow: '0 10px 30px rgba(0,0,0,.35)'}}>{text}</div>;
 };
@@ -171,12 +173,12 @@ const BottleGrid: React.FC<{fr: number; s: number; e: number; top?: number; dela
 };
 
 // ---------- timeline Black Friday + pins ----------
-const Timeline: React.FC<{fr: number; s: number; e: number}> = ({fr, s, e}) => {
+const Timeline: React.FC<{fr: number; s: number; e: number; top?: number}> = ({fr, s, e, top = 1130}) => {
   if (!on(fr, s, e)) return null;
   const p = ip(fr, f(s) + 20, f(s) + 50, 0, 1, Easing.inOut(Easing.cubic));
   const W = 600;
   return (
-    <div style={{position: 'absolute', left: CX - W / 2 - 34, width: W + 68, top: 1130, padding: '22px 34px', boxSizing: 'border-box', borderRadius: 24, background: 'rgba(16,11,7,.66)', backdropFilter: 'blur(16px)', border: '1px solid rgba(217,178,106,.4)', opacity: life(fr, s, e, 12, 8)}}>
+    <div style={{position: 'absolute', left: CX - W / 2 - 34, width: W + 68, top, padding: '22px 34px', boxSizing: 'border-box', borderRadius: 24, background: 'rgba(16,11,7,.66)', backdropFilter: 'blur(16px)', border: '1px solid rgba(217,178,106,.4)', opacity: life(fr, s, e, 12, 8)}}>
       <div style={{display: 'flex', justifyContent: 'space-between', fontFamily: SANS, fontWeight: 700, fontSize: 40, color: CREAM, fontVariantNumeric: 'tabular-nums'}}><span>20.11</span><span style={{color: GOLD_L}}>30.11</span></div>
       <div style={{position: 'relative', height: 6, borderRadius: 3, background: 'rgba(245,235,221,.25)', marginTop: 12}}>
         <div style={{position: 'absolute', left: 0, top: 0, height: 6, width: `${p * 100}%`, borderRadius: 3, background: `linear-gradient(90deg, ${AMBER}, ${GOLD_L})`}} />
@@ -223,38 +225,51 @@ const SUBS: [number, number, string, string[]][] = [
   [2.84, 4.4, 'Đó chính là chai Tygar', ['Tygar']],
   [4.4, 5.84, 'của dòng Le Gemme mọi người', ['Le Gemme']],
   [5.84, 7.2, 'Chai rất là xinh', ['xinh']],
-  [7.2, 9.36, 'và nó lấy cảm hứng từ viên đá mắt hổ', ['đá mắt hổ']],
-  [9.36, 12.6, 'Thì cái chai này quầy sẽ gói qua', ['gói']],
-  [12.6, 14.1, 'và đem đi, và Darren đã mượn', ['mượn']],
+  [7.2, 8.06, 'và nó lấy cảm hứng từ', []],
+  [8.06, 9.36, 'viên đá mắt hổ', ['mắt hổ']],
+  [9.36, 10.6, 'Thì cái chai này', []],
+  [10.6, 13.08, 'quầy sẽ gói qua và đem đi', ['gói']],
+  [13.08, 14.1, 'và Darren đã mượn', ['mượn']],
   [14.1, 16.04, 'để mà quay cho mọi người xem', []],
-  [16.04, 18.98, 'Tại vì chai này ít khi mà có chai mới ở cửa hàng lắm', ['chai mới']],
-  [18.98, 21.1, 'tại vì nó luôn cháy hàng đó mọi người', ['cháy hàng']],
-  [42.3, 44.4, 'Tuy nhiên thì nốt này Darren thấy unisex', ['unisex']],
+  [16.04, 17.42, 'Tại vì chai này ít khi mà có', []],
+  [17.42, 18.98, 'chai mới ở cửa hàng lắm', ['chai mới']],
+  [18.98, 20.3, 'tại vì nó luôn cháy hàng', ['cháy hàng']],
+  [20.3, 20.82, 'đó mọi người', []],
+  [42.62, 43.5, 'Tuy nhiên thì nốt này', []],
+  [43.5, 44.4, 'Darren thấy unisex', ['unisex']],
   [44.4, 46.3, 'nam nữ xài bình thường vô tư', ['nam nữ']],
-  [46.3, 47.9, 'Và một cái nốt hương Darren thấy ấn tượng', ['ấn tượng']],
-  [47.9, 49.14, 'đó chính là long diên hương mọi người', ['long diên hương']],
+  [46.3, 47.0, 'Và một cái nốt hương', []],
+  [47.0, 47.7, 'Darren thấy ấn tượng', ['ấn tượng']],
+  [47.7, 49.14, 'đó chính là long diên hương', ['long diên hương']],
   [49.14, 50.5, 'Một cái nốt bưởi kết hợp với', ['bưởi']],
-  [50.5, 52.12, 'long diên hương, cay cay nhẹ của gừng', ['gừng']],
+  [50.5, 51.0, 'long diên hương', ['long diên hương']],
+  [51.0, 52.12, 'cay cay nhẹ của gừng', ['gừng']],
   [52.12, 54.5, 'Một cái hương cực kỳ cuốn luôn', ['cuốn']],
-  [54.5, 56.24, 'Ai mà mua rồi sẽ mua đi mua lại', ['mua đi mua lại']],
-  [56.24, 58.5, 'Một cái mùi hương tươi mà không nhạt', ['tươi']],
+  [54.5, 56.24, 'Ai mua rồi sẽ mua đi mua lại', ['mua đi mua lại']],
+  [56.24, 57.0, 'Một cái mùi hương', []],
+  [57.0, 58.5, 'tươi mà không nhạt', ['tươi']],
   [58.5, 59.76, 'sang mà không bị nặng mùi', ['sang']],
-  [59.76, 61.7, 'Mọi người thực sự là dùng sẽ ghiền', ['ghiền']],
+  [59.76, 61.0, 'Mọi người thực sự là', []],
+  [61.0, 61.7, 'dùng sẽ ghiền', ['ghiền']],
   [61.7, 62.8, 'và sẽ mua đi mua lại luôn', []],
-  [62.8, 64.38, 'Đó là lý do vì sao em này luôn cháy hàng', ['cháy hàng']],
-  [64.38, 67.0, 'Mặc dù giá cũng nằm trong phân khúc cao cấp á mọi người', ['cao cấp']],
+  [62.8, 63.6, 'Đó là lý do vì sao', []],
+  [63.6, 64.38, 'em này luôn cháy hàng', ['cháy hàng']],
+  [64.38, 65.7, 'Mặc dù giá cũng nằm trong', []],
+  [65.7, 67.0, 'phân khúc cao cấp á mọi người', ['cao cấp']],
   [67.0, 68.06, '13 củ', ['13 củ']],
-  [68.06, 69.84, 'Trong dịp Black Friday này giảm 20%', ['giảm 20%']],
-  [69.84, 72.28, 'thì đâu đó còn 10 triệu mấy và tặng thêm một chai sữa tắm', ['10 triệu mấy']],
-  [72.28, 75.6, 'hoặc là một cái tuýp kem tay, full size luôn nha', ['full size']],
+  [68.06, 68.9, 'Trong dịp Black Friday này', ['Black Friday']],
+  [68.9, 69.84, 'giảm 20%', ['giảm 20%']],
+  [69.84, 71.0, 'thì đâu đó còn 10 triệu mấy', ['10 triệu mấy']],
+  [71.0, 72.28, 'và tặng thêm một chai sữa tắm', ['sữa tắm']],
+  [72.28, 73.9, 'hoặc là một cái tuýp kem tay', ['kem tay']],
+  [73.9, 75.6, 'full size luôn nha', ['full size']],
   [75.6, 76.9, 'Vừa được có deal hời', ['deal hời']],
 ];
 const Subs: React.FC<{fr: number; hide: boolean}> = ({fr, hide}) => {
   const cur = SUBS.find(([s, e]) => fr >= f(s) && fr < f(e));
   if (!cur || hide) return null;
-  const [s, , txt, keys] = cur;
-  const a = ip(fr, f(s), f(s) + 5);
-  // tách từ khóa
+  const [s, e, txt, keys] = cur;
+  const a = Math.min(ip(fr, f(s), f(s) + 6), ip(fr, f(e) - 3, f(e), 1, 0.35, Easing.linear));
   const parts: [string, boolean][] = [];
   let rest = txt;
   while (rest.length) {
@@ -264,12 +279,14 @@ const Subs: React.FC<{fr: number; hide: boolean}> = ({fr, hide}) => {
     if (hit > 0) parts.push([rest.slice(0, hit), false]);
     parts.push([k, true]); rest = rest.slice(hit + k.length);
   }
-  return <div style={{position: 'absolute', left: SAFE.l, right: SAFE.r, top: 1395, textAlign: 'center', opacity: a, display: 'flex', justifyContent: 'center',
-    transform: `translateY(${(1 - a) * 10}px)`, lineHeight: 1.22}}><div style={{padding: '8px 22px 12px', borderRadius: 18, background: 'rgba(14,9,5,.42)', backdropFilter: 'blur(6px)', maxWidth: 800}}>
+  const fs = Math.min(46, Math.round(800 / (0.53 * txt.length)));
+  const sh: React.CSSProperties = {WebkitTextStroke: '7px rgba(20,12,6,.92)', paintOrder: 'stroke fill', textShadow: '0 4px 14px rgba(0,0,0,.55)'};
+  return <div style={{position: 'absolute', left: SAFE.l, right: SAFE.r, top: fr > f(42) ? 1445 : 1405, textAlign: 'center', whiteSpace: 'nowrap', opacity: a,
+    transform: `translateY(${(1 - ip(fr, f(s), f(s) + 7)) * 14}px)`, filter: `blur(${(1 - ip(fr, f(s), f(s) + 6)) * 4}px)`}}>
     {parts.map(([p, k], i) => k
-      ? <span key={i} style={{whiteSpace: 'nowrap', fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 52, color: GOLD_L, textShadow: '0 2px 4px rgba(0,0,0,.9), 0 0 18px rgba(0,0,0,.6)'}}>{p}</span>
-      : <span key={i} style={{fontFamily: SANS, fontWeight: 600, fontSize: 42, color: '#FFF8EC', textShadow: '0 2px 4px rgba(0,0,0,.9), 0 0 18px rgba(0,0,0,.6)'}}>{p}</span>)}
-  </div></div>;
+      ? <span key={i} style={{...sh, fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: fs * 1.2, color: GOLD_L}}>{p}</span>
+      : <span key={i} style={{...sh, fontFamily: SANS, fontWeight: 600, fontSize: fs, color: '#FFF8EC'}}>{p}</span>)}
+  </div>;
 };
 
 // sticker viên đá mắt hổ THẬT (ảnh Wikimedia, cutout) nổi cạnh chai
@@ -295,7 +312,7 @@ export const TygarTalk: React.FC<{noPerson?: boolean}> = ({noPerson = false}) =>
     <AbsoluteFill style={{background: INK, overflow: 'hidden'}}>
       <OffthreadVideo src={staticFile('tygar_talk/base.mp4')} muted style={{filter: 'contrast(1.04) saturate(1.05)'}} />
       {/* ===== SAU NGƯỜI ===== */}
-      <BigWord fr={fr} s={42.6} e={46.3} small="nam nữ đều xài" word="unisex" serif size={170} top={228} />
+      <BigWord fr={fr} s={42.62} e={46.3} small="nam nữ đều xài" word="unisex" serif size={170} top={228} />
       <BigWord fr={fr} s={47.7} e={49.14} small="ấn tượng nhất" word="long diên hương" serif size={96} top={228}  />
       <BigWord fr={fr} s={52.7} e={54.5} small="một mùi hương" word="cuốn" serif size={170} top={228} />
       <BigWord fr={fr} s={54.7} e={56.24} small="mua đi" word="mua lại" serif size={170} top={228} />
@@ -314,25 +331,27 @@ export const TygarTalk: React.FC<{noPerson?: boolean}> = ({noPerson = false}) =>
       <BigWord fr={fr} s={7.2} e={9.36} small="cảm hứng từ" word="mắt hổ" serif size={150} top={228}  />
       <BigWord fr={fr} s={13.4} e={16.04} small="Darren đã" word="mượn" serif size={150} top={228} />
       <BigWord fr={fr} s={16.04} e={18.98} small="ít khi có" word="chai mới" serif size={125} top={228}  />
-      <BigWord fr={fr} s={18.98} e={21.0} small="vì luôn" word="cháy hàng" serif size={125} top={228}  />
+      <BigWord fr={fr} s={18.98} e={20.5} small="vì luôn" word="cháy hàng" serif size={125} top={228}  />
       {/* ===== TRƯỚC NGƯỜI ===== */}
       <Pill fr={fr} s={1.5} e={2.84} x={CX} y={1170} text="LUÔN HẾT HÀNG" />
       <Glass fr={fr} s={3.4} e={5.84} top={1160} icon={<IcBottle />} title="Bvlgari Le Gemme Tygar" sub="Eau de Parfum" width={600} />
       <StoneSticker fr={fr} s={8.5} e={9.6} />
-      <Glass fr={fr} s={10.0} e={13.3} top={1160} icon={<IcGift />} title="Khách mua → quầy gói mang đi" sub="hiếm khi còn chai trưng sẵn" width={640} />
+      <Glass fr={fr} s={10.0} e={13.3} top={1160} icon={<IcGift />} title="Khách mua → quầy gói mang đi" sub="hiếm khi còn hàng" width={640} />
       <Pill fr={fr} s={13.7} e={16.04} x={CX} y={1170} text="MƯỢN QUẦY ĐỂ QUAY" dark />
-      <Pill fr={fr} s={19.8} e={21.0} x={CX} y={1170} text="CHÁY HÀNG LIÊN TỤC" />
-      <Pill fr={fr} s={44.6} e={46.3} x={CX - 110} y={1170} text="NAM" dark />
-      <Pill fr={fr} s={44.86} e={46.3} x={CX + 110} y={1170} text="NỮ" dark />
-      <Glass fr={fr} s={48.1} e={49.14} top={1160} icon={<IcGem />} title="Long diên hương" sub="nốt Darren thấy ấn tượng nhất" width={600} />
-      <Pyramid fr={fr} s={49.3} e={52.2} top={1040} rows={[['TƯƠI SÁNG', 'Bưởi', 49.5], ['ẤN TƯỢNG', 'Long diên hương', 50.5], ['CAY NHẸ', 'Gừng', 51.5]]} />
-      <BottleGrid fr={fr} s={54.5} e={56.24} top={1200} delay={10} />
-      <Duo fr={fr} s={56.9} e={59.9} d2={f(58.5) - f(56.9)} />
-      <Pill fr={fr} s={64.9} e={67.0} x={CX} y={1170} text="PHÂN KHÚC CAO CẤP" dark />
-      <Timeline fr={fr} s={68.06} e={69.84} />
-      <Glass fr={fr} s={71.1} e={72.28} top={1160} icon={<IcGift />} title="Tặng 1 chai sữa tắm" sub="khi mua Tygar dịp Black Friday" width={620} />
-      <Glass fr={fr} s={72.7} e={endS} top={1160} icon={<IcHand />} title="hoặc 1 tuýp kem tay" sub="full size luôn" width={560} />
-      <Subs fr={fr} hide={inCover || fr >= f(endS) || on(fr, 49.3, 52.2) || on(fr, 56.9, 59.9)} />
+      <Pill fr={fr} s={19.8} e={20.8} x={CX} y={1170} text="CHÁY HÀNG LIÊN TỤC" />
+      <Pill fr={fr} s={44.6} e={46.3} x={CX - 110} y={1310} text="NAM" dark />
+      <Pill fr={fr} s={44.86} e={46.3} x={CX + 110} y={1310} text="NỮ" dark />
+      <Glass fr={fr} s={48.1} e={49.14} top={1295} icon={<IcGem />} title="Long diên hương" sub="nốt Darren thấy ấn tượng nhất" width={600} />
+      <Pill fr={fr} s={49.5} e={53.2} x={CX - 270} y={1310} text="Bưởi" dark />
+      <Pill fr={fr} s={50.5} e={53.2} x={CX} y={1310} text="Long diên hương" dark />
+      <Pill fr={fr} s={51.9} e={53.2} x={CX + 270} y={1310} text="Gừng" dark />
+      <BottleGrid fr={fr} s={54.5} e={56.24} top={1320} delay={10} />
+      <Glass fr={fr} s={57.0} e={59.9} top={1295} icon={<IcGem />} title="Tươi mà không nhạt" sub="sang mà không bị nặng mùi" width={560} />
+      <Pill fr={fr} s={64.9} e={67.0} x={CX} y={1310} text="PHÂN KHÚC CAO CẤP" dark />
+      <Timeline fr={fr} s={68.06} e={69.84} top={1300} />
+      <Glass fr={fr} s={71.1} e={72.28} top={1295} icon={<IcGift />} title="Tặng 1 chai sữa tắm" sub="khi mua Tygar dịp Black Friday" width={620} />
+      <Glass fr={fr} s={72.7} e={endS} top={1295} icon={<IcHand />} title="hoặc 1 tuýp kem tay" sub="full size luôn" width={560} />
+      <Subs fr={fr} hide={inCover || fr >= f(endS) || on(fr, 68.06, 69.84)} />
       <EndCard fr={fr} s={endS} e={80} />
     </AbsoluteFill>
   );

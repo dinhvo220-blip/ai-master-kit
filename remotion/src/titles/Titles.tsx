@@ -186,39 +186,61 @@ const Scene1: React.FC<{fr: number; s: number; e: number}> = ({fr, s, e}) => {
   );
 };
 
-// ================= 02: chữ khối đỏ phát sáng + chữ viết tay đè lên (mẫu "Chomage and Chill") =================
+// ================= 02: chữ khối đỏ phát sáng + chữ viết tay vắt ngang (mẫu "Chomage and Chill") =================
+// Vẽ hoàn toàn bằng SVG <text> (background-clip:text + filter bị Chrome tô tràn thành khối chữ nhật khi render scale 1)
 const Scene2: React.FC<{fr: number; s: number; e: number}> = ({fr, s, e}) => {
   const S = f(s), E = f(e);
-  const word = 'FRIDAY';
   const q = ip(fr, E - 12, E, 0, 1, EOUT);
-  const script = ip(fr, S + 22, S + 46, 0, 1, Easing.inOut(Easing.sin));
-  const glow = 0.8 + 0.2 * Math.sin(fr / 9);
-  const dust = Array.from({length: 40}).map((_, i) => {
-    const x = 120 + random(`dx${i}`) * 760, y0 = 640 + random(`dy${i}`) * 260, sp = 0.6 + random(`ds${i}`) * 1.4;
-    const y = y0 - ((fr * sp) % 220);
-    return <div key={i} style={{position: 'absolute', left: x, top: y, width: 3 + random(`dz${i}`) * 4, height: 3 + random(`dz${i}`) * 4, borderRadius: '50%', background: '#FF5A2A', opacity: 0.25 + random(`do${i}`) * 0.5, filter: 'blur(1px)'}} />;
+  const rise = ip(fr, S + 2, S + 20);                       // chữ khối trồi lên qua mép che
+  const wipe = ip(fr, S + 2, S + 22, 0, 1, Easing.inOut(Easing.cubic)); // quét chéo để có cảm giác từng chữ lần lượt
+  const script = ip(fr, S + 20, S + 48, 0, 1, Easing.inOut(Easing.sin));
+  const glow = 0.85 + 0.15 * Math.sin(fr / 9);
+  const z = 1 + interpolate(fr, [S, E], [0, 0.03], cl);
+  const dust = Array.from({length: 70}).map((_, i) => {
+    const x = 80 + random(`dx${i}`) * 800, y0 = 150 + random(`dy${i}`) * 90, sp = 0.4 + random(`ds${i}`) * 1.2;
+    const y = y0 - ((fr * sp + random(`dp${i}`) * 120) % 120);
+    return <circle key={i} cx={x} cy={y} r={1 + random(`dz${i}`) * 2.2} fill="#FF5A2A" opacity={(0.2 + random(`do${i}`) * 0.6) * rise} />;
   });
+  const W = 960; // khung vẽ = cả bề ngang vùng an toàn + lề
   return (
     <AbsoluteFill style={{background: '#000'}}>
-      <div style={{position: 'absolute', inset: 0, background: `radial-gradient(55% 22% at 45% 42%, rgba(200,30,10,${0.35 * glow}), transparent 75%)`}} />
-      {dust}
+      <div style={{position: 'absolute', inset: 0, background: `radial-gradient(55% 20% at 46% 44%, rgba(200,30,10,${0.32 * glow}), transparent 75%)`}} />
       <HBlur id="b2" x={q * 80} />
-      <div style={{position: 'absolute', left: SAFE.l - 20, right: SAFE.r - 20, top: 620, textAlign: 'center', opacity: 1 - q, filter: 'url(#b2)', transform: `scaleX(${1 + q * 0.4}) scale(${1 + interpolate(fr, [S, E], [0, 0.03], cl)})`}}>
-        <div style={{fontFamily: SANS, fontWeight: 300, fontSize: 36, letterSpacing: '0.5em', color: 'rgba(255,220,200,.85)', opacity: ip(fr, S + 4, S + 18), marginBottom: -10}}>BLACK</div>
-        <div style={{display: 'inline-flex', overflow: 'hidden', paddingTop: 10}}>
-          {word.split('').map((c, i) => {
-            const p = ip(fr, S + 2 + i * 2, S + 16 + i * 2);
-            return <span key={i} style={{display: 'inline-block', fontFamily: ANTON, fontSize: 250, lineHeight: 1.05, letterSpacing: '0.01em', transform: `translateY(${(1 - p) * 105}%)`,
-              background: `linear-gradient(90deg, rgba(0,0,0,.18) 0 18%, transparent 18% 52%, rgba(0,0,0,.12) 52% 70%, transparent 70%), linear-gradient(180deg, #FF4A26 0%, #E3200F 55%, #A80F07 100%)`,
-              WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', filter: `drop-shadow(0 0 ${18 * glow}px rgba(255,60,20,.75)) drop-shadow(0 0 50px rgba(255,40,0,.45))`}}>{c}</span>;
-          })}
-        </div>
-        <div style={{position: 'absolute', left: 0, right: 0, top: 300, fontFamily: SANS, fontWeight: 700, fontSize: 26, color: '#fff', letterSpacing: '0.1em', opacity: ip(fr, S + 20, S + 30)}}>&amp;</div>
-        <div style={{position: 'absolute', left: 0, right: 0, top: 255, textAlign: 'center', transform: 'rotate(-7deg)'}}>
-          <span style={{display: 'inline-block', fontFamily: SCRIPT, fontWeight: 700, fontSize: 230, lineHeight: 1.2, padding: '0.2em 0.2em 0',
-            background: 'linear-gradient(180deg, #FFE7D2 0%, #FFB089 40%, #F05A2C 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
-            clipPath: `inset(-30% ${100 - script * 100}% -30% -5%)`, filter: 'drop-shadow(0 6px 18px rgba(0,0,0,.6)) drop-shadow(0 0 14px rgba(255,140,90,.35))'}}>giảm sâu</span>
-        </div>
+      <div style={{position: 'absolute', left: 0, width: W, top: 560, opacity: 1 - q, filter: 'url(#b2)', transform: `scaleX(${1 + q * 0.4}) scale(${z})`, transformOrigin: '480px 300px'}}>
+        <svg width={W} height={720} viewBox={`0 0 ${W} 720`} style={{overflow: 'visible'}}>
+          <defs>
+            <linearGradient id="c2-red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FF4C28" /><stop offset="0.55" stopColor="#E3200F" /><stop offset="1" stopColor="#9E0D06" /></linearGradient>
+            {/* các mảng dọc sáng/tối như chữ ghép tấm */}
+            <pattern id="c2-slab" patternUnits="userSpaceOnUse" width="104" height="400">
+              <rect width="104" height="400" fill="url(#c2-red)" />
+              <rect x="0" width="30" height="400" fill="#000" opacity="0.2" />
+              <rect x="52" width="16" height="400" fill="#000" opacity="0.12" />
+              <rect x="84" width="8" height="400" fill="#FFB199" opacity="0.10" />
+            </pattern>
+            <linearGradient id="c2-script" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFE9D6" /><stop offset="0.45" stopColor="#FFB08A" /><stop offset="1" stopColor="#F0582A" /></linearGradient>
+            <filter id="c2-glow" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation={16 * glow} /></filter>
+            <filter id="c2-soft" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="7" /></filter>
+            <clipPath id="c2-band"><rect x="-50" y="60" width={W + 100} height="300" /></clipPath>
+            <clipPath id="c2-wipe"><polygon points={`${-200 + wipe * 1400},0 ${-500 + wipe * 1400},720 -600,720 -600,0`} /></clipPath>
+            <clipPath id="c2-draw"><rect x="-50" y="-50" width={(W + 200) * script} height="900" /></clipPath>
+          </defs>
+          {dust}
+          <text x={480} y={78} textAnchor="middle" fontFamily={SANS} fontWeight={300} fontSize={34} letterSpacing={18} fill="rgba(255,220,200,.88)" opacity={ip(fr, S + 6, S + 18)}>BLACK</text>
+          <g clipPath="url(#c2-band)">
+            <g clipPath="url(#c2-wipe)" transform={`translate(0 ${(1 - rise) * 300})`}>
+              <text x={480} y={340} textAnchor="middle" fontFamily={ANTON} fontSize={300} letterSpacing={4} fill="#FF3A16" filter="url(#c2-glow)" opacity={0.75}>FRIDAY</text>
+              <text x={480} y={340} textAnchor="middle" fontFamily={ANTON} fontSize={300} letterSpacing={4} fill="url(#c2-slab)">FRIDAY</text>
+              <text x={480} y={340} textAnchor="middle" fontFamily={ANTON} fontSize={300} letterSpacing={4} fill="none" stroke="#FFD0BE" strokeOpacity={0.25} strokeWidth={1.5}>FRIDAY</text>
+            </g>
+          </g>
+          {/* chữ viết tay vắt chéo qua giữa chữ khối */}
+          <g clipPath="url(#c2-draw)" transform="rotate(-8 480 360)">
+            <text x={470} y={378} textAnchor="middle" fontFamily={SCRIPT} fontWeight={700} fontSize={228} fill="#000" opacity={0.55} filter="url(#c2-soft)">giảm sâu</text>
+            <text x={470} y={370} textAnchor="middle" fontFamily={SCRIPT} fontWeight={700} fontSize={228} fill="#FF7A4A" opacity={0.45} filter="url(#c2-glow)">giảm sâu</text>
+            <text x={470} y={370} textAnchor="middle" fontFamily={SCRIPT} fontWeight={700} fontSize={228} fill="url(#c2-script)">giảm sâu</text>
+          </g>
+          <text x={478} y={232} textAnchor="middle" fontFamily={SANS} fontWeight={800} fontSize={26} letterSpacing={2} fill="#FFFFFF" opacity={ip(fr, S + 16, S + 26)}>&amp;</text>
+        </svg>
       </div>
       <Grain fr={fr} o={0.12} />
     </AbsoluteFill>
@@ -280,10 +302,29 @@ const Scene4: React.FC<{fr: number; s: number; e: number}> = ({fr, s, e}) => {
       <div style={{position: 'absolute', left: SAFE.l, right: SAFE.r, top: 520, textAlign: 'center', fontFamily: SERIF, fontWeight: 400, fontSize: 30, letterSpacing: '0.32em', color: '#E8ECF8', opacity: ip(fr, S + 10, S + 26) * (1 - q)}}>GUCCI BEAUTY · HOLIDAY</div>
       <HBlur id="b4" x={(1 - p) * 40 + q * 70} />
       <div style={{position: 'absolute', left: SAFE.l - 30, right: SAFE.r - 30, top: 640, textAlign: 'center', opacity: Math.min(1, p * 1.3) * (1 - q), filter: 'url(#b4)', transform: `scaleX(${1 + q * 0.4}) scale(${1 + interpolate(fr, [S, E], [0, 0.04], cl)})`}}>
-        <span style={{display: 'inline-block', fontFamily: SERIF, fontWeight: 300, fontSize: 290, lineHeight: 1.1, letterSpacing: '-0.03em', padding: '0.2em 0.1em 0',
-          background: `linear-gradient(${120 + hue}deg, rgba(90,170,255,.55) 0%, rgba(200,225,255,.95) 22%, rgba(110,120,255,.75) 40%, rgba(255,255,255,1) 52%, rgba(170,120,255,.75) 66%, rgba(110,210,255,.7) 85%, rgba(220,200,255,.9) 100%)`,
-          WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', WebkitTextStroke: '1.5px rgba(210,230,255,.75)',
-          filter: 'drop-shadow(0 0 10px rgba(120,170,255,.6)) drop-shadow(0 0 40px rgba(120,100,255,.35))'}}>flora</span>
+        {/* vẽ bằng SVG <text>: background-clip:text + text-stroke bị Chrome tô tràn cả khung khi render scale 1 */}
+        <svg width={880} height={370} viewBox="0 0 1000 420" style={{overflow: 'visible'}}>
+          <defs>
+            <linearGradient id="gl-fill" gradientUnits="userSpaceOnUse" x1="120" y1="80" x2={880 + hue * 3} y2="360">
+              <stop offset="0" stopColor="#5AA8FF" stopOpacity="0.35" /><stop offset="0.25" stopColor="#C8DCFF" stopOpacity="0.55" />
+              <stop offset="0.45" stopColor="#6E78FF" stopOpacity="0.45" /><stop offset="0.55" stopColor="#FFFFFF" stopOpacity="0.85" />
+              <stop offset="0.7" stopColor="#A878FF" stopOpacity="0.5" /><stop offset="1" stopColor="#6ED2FF" stopOpacity="0.4" />
+            </linearGradient>
+            <linearGradient id="gl-edge" gradientUnits="userSpaceOnUse" x1="100" y1="60" x2="900" y2="380">
+              <stop offset="0" stopColor="#BFE3FF" /><stop offset="0.4" stopColor="#FFFFFF" /><stop offset="0.6" stopColor="#B7A2FF" /><stop offset="1" stopColor="#8FE0FF" />
+            </linearGradient>
+            <linearGradient id="gl-spec" gradientUnits="userSpaceOnUse" x1={sweep - 300} y1="0" x2={sweep + 100} y2="420">
+              <stop offset="0" stopColor="#fff" stopOpacity="0" /><stop offset="0.5" stopColor="#fff" stopOpacity="0.9" /><stop offset="1" stopColor="#fff" stopOpacity="0" />
+            </linearGradient>
+            <filter id="gl-glow" x="-20%" y="-30%" width="140%" height="160%"><feGaussianBlur stdDeviation="14" /></filter>
+          </defs>
+          {(['glow', 'fill', 'edge', 'spec'] as const).map((k) => (
+            <text key={k} x={500} y={315} textAnchor="middle" fontFamily={SERIF} fontWeight={300} fontSize={290} letterSpacing={-8}
+              fill={k === 'fill' ? 'url(#gl-fill)' : k === 'glow' ? 'rgba(120,150,255,.55)' : 'none'}
+              stroke={k === 'edge' ? 'url(#gl-edge)' : k === 'spec' ? 'url(#gl-spec)' : 'none'} strokeWidth={k === 'edge' ? 2.2 : k === 'spec' ? 4 : 0}
+              filter={k === 'glow' ? 'url(#gl-glow)' : undefined}>flora</text>
+          ))}
+        </svg>
       </div>
       {/* lóe sáng chạy qua */}
       <div style={{position: 'absolute', left: sweep - 160, top: 640, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,.9) 0%, rgba(170,200,255,.35) 25%, transparent 60%)', mixBlendMode: 'screen', opacity: 1 - q}} />

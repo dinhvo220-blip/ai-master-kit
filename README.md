@@ -90,3 +90,8 @@ Model tách nền: rembg tự tải u2net_human_seg (~176MB) vào ~/.rembg/model
 - Serif tự co: fontSize = min(124, 780/(0.52*số ký tự)) để câu dài không tràn mép.
 - Card layout: thêm CardWord lớn để phần trên thẻ không trống.
 - Sửa đoạn ngắn: render --frames từng đoạn, cắt phần còn lại bằng select, concat demuxer rồi re-encode với setpts=N/30/TB (concat -c copy làm hỏng timestamp; filter trim nhiều lần trên 1 input bị OOM).
+
+## Bvlgari Le Gemme Tygar – đồ hoạ soạn trước theo kịch bản voice-off (26/11/2026)
+- Code: `remotion/src/tygar/Tygar.tsx` (comp `TygarGfx`, entry `src/tygar/index.ts`), duyệt still: `node stills_tygar.mjs 60 150 ...`.
+- Style dynamic word reels (skill 6h) + tông mắt hổ: đen #0D0A07 / nâu #2A1A0E / hổ phách #C47A2C / vàng #D9B26A→#F3DDA2. Từ khóa khổng lồ sau đầu đổi theo lời (13tr đếm số → Tygar → Le Gemme → đá quý → mắt hổ → Kerala → Cavallier → bưởi/gừng/hổ phách → ngày & đêm → -20%), thẻ kính mờ, viên đá mắt hổ cabochon có dải sáng chạy, tháp hương, lưới chai sáng dần, timeline 20.11→30.11, màn kết.
+- `preview=true` vẽ nền + bóng người giả. Khi có clip: thay PreviewBg/PreviewPerson bằng OffthreadVideo + matte, khớp BEATS theo timestamp lời thật.
